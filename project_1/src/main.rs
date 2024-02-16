@@ -50,6 +50,14 @@ fn plot_stock_data(symbol: &str, data: &[(f64, f64, f64, f64, f64)]) -> Result<(
         data.iter().map(|x| (x.0, x.1)),
         &ORANGE,
     ))?;
+    chart.draw_series(
+        volatile_data.iter().map(|x| {
+            PathElement::new(
+                vec![(x.0, x.2), (x.0, x.3)],
+                &BLUE,
+            )
+        })
+    )?;
     Ok(())
 }
 
