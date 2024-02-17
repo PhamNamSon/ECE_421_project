@@ -7,7 +7,7 @@
 
 2. **Financial Analysis Algorithm**
    - If the percent change of a stock price on a given day is greater than 2%, it is considered volatile.
-   - let percent_change = ((high-low)/close) * 100 as f64; // Algorithm for calculating percent change
+   - percent change = ((high-low)/close) * 100
 
 3. **Charting Setup**
    - Line chart
