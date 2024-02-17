@@ -3,6 +3,7 @@ use yahoo_finance_api as yahoo;
 use time::{OffsetDateTime, Duration};
 use tokio;
 use plotters::{prelude::*, style::full_palette::ORANGE};
+use chrono::{Utc, TimeZone, NaiveDateTime};
 
 async fn fetch_stock_data(symbol: &str) -> Result<Vec<(f64, f64, f64, f64, f64)>, Box<dyn std::error::Error>> {
     let provider = yahoo::YahooConnector::new();
@@ -26,6 +27,7 @@ fn plot_stock_data(symbol: &str, data: &[(f64, f64, f64, f64, f64)]) -> Result<(
     let root = BitMapBackend::new(&file_name, (640, 480)).into_drawing_area();
     root.fill(&WHITE)?;
     let min_date = data.iter().map(|x| x.0).fold(f64::INFINITY, f64::min);
+    //let max_date = data.iter().map(|x| OffsetDateTime::from_unix_timestamp(x.0 as i64)).fold(OffsetDateTime::UNIX_EPOCH, |max, current|);
     let max_date = data.iter().map(|x| x.0).fold(f64::NEG_INFINITY, f64::max);
     let min_price = data.iter().map(|x| x.1).fold(f64::INFINITY, f64::min);
     let max_price = data.iter().map(|x| x.1).fold(f64::NEG_INFINITY, f64::max);
@@ -41,7 +43,7 @@ fn plot_stock_data(symbol: &str, data: &[(f64, f64, f64, f64, f64)]) -> Result<(
         .margin(5)
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(min_date..max_date, min_price..max_price)?;
+        .build_cartesian_2d(NaiveDateTime::from_timestamp_millis(min_date).unwrap()..NaiveDateTime::from_timestamp_millis(max_date).unwrap(), min_price..max_price)?;
 
     chart.configure_mesh().draw()?;
     chart.draw_series(LineSeries::new(
