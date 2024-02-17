@@ -8,7 +8,7 @@
 3. **Charting Setup**
    - Line chart
    - X-axis: Date and time
-   - Y-axis: Closing price
+   - Y-axis: Closing price; will be auto-scaled
    - Error bars used to highlight volatile days
     
 5. **Project Setup**
