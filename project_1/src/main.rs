@@ -67,6 +67,8 @@ async fn main() {
         let mut symbol = String::new();
         io::stdin().read_line(&mut symbol).expect("Failed to read line");
 
+        let len = symbol.len();
+        symbol.truncate(len - 1);
         if symbol.trim().to_lowercase() == "quit" {
             break;
         }
