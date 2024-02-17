@@ -10,6 +10,8 @@
    - X-axis: Date and time
    - Y-axis: Closing price; will be auto-scaled
    - Error bars used to highlight volatile days
+   - The top and bottom caps of the error bars are the intraday high and low values respectively,
+     and the circle is the closing value
     
 5. **Project Setup**
    - main.rs is located in project_1/src/
@@ -20,5 +22,5 @@
    - Run _cargo build_
    - Run _cargo run_
    - Enter a stock ticker when prompted
+   - Chart will appear in the project_1 directory named _stock_ticker_.png 
    - Enter another stock ticker or "quit" to exit the program
-   - After the program is quit, the chart will appear in the project_1 directory named _stock_ticker_.png
