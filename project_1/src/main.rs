@@ -3,7 +3,7 @@ use yahoo_finance_api as yahoo;
 use time::{OffsetDateTime, Duration};
 use tokio;
 use plotters::{prelude::*, style::full_palette::ORANGE};
-use chrono::{Utc, TimeZone, NaiveDateTime};
+use chrono::{Utc, TimeZone, NaiveDateTime, DateTime};
 
 async fn fetch_stock_data(symbol: &str) -> Result<Vec<(f64, f64, f64, f64, f64)>, Box<dyn std::error::Error>> {
     let provider = yahoo::YahooConnector::new();
@@ -38,16 +38,21 @@ fn plot_stock_data(symbol: &str, data: &[(f64, f64, f64, f64, f64)]) -> Result<(
         .cloned()
         .collect();
 
+    // Convert data to the expected type
+    let converted_data: Vec<(DateTime<Utc>, f64)> = data.iter().map(|x| {
+        (DateTime::from_utc(NaiveDateTime::from_timestamp_millis(x.0 as i64).unwrap(), Utc), x.1)
+    }).collect();
+
     let mut chart = ChartBuilder::on(&root)
         .caption(format!("Closing Prices: {}", symbol), ("sans-serif", 50).into_font())
         .margin(5)
         .x_label_area_size(30)
         .y_label_area_size(30)
-        .build_cartesian_2d(NaiveDateTime::from_timestamp_millis(min_date).unwrap()..NaiveDateTime::from_timestamp_millis(max_date).unwrap(), min_price..max_price)?;
+        .build_cartesian_2d(DateTime::from_utc(NaiveDateTime::from_timestamp_millis(min_date as i64).unwrap(), TimeZone::offset_from_utc_datetime(NaiveDateTime::from_timestamp_millis(min_date as i64).unwrap()))..DateTime::from_utc(NaiveDateTime::from_timestamp_millis(max_date as i64).unwrap(), TimeZone::offset_from_utc_datetime(NaiveDateTime::from_timestamp_millis(min_date as i64).unwrap())), min_price..max_price)?;
 
     chart.configure_mesh().draw()?;
     chart.draw_series(LineSeries::new(
-        data.iter().map(|x| (x.0, x.1)),
+        converted_data.iter().map(|x| (x.0, x.1)),
         &ORANGE,
     ))?;
     chart.draw_series(
