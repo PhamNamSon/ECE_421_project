@@ -1,8 +1,7 @@
 use std::io;
 use yahoo_finance_api as yahoo;
 use time::{OffsetDateTime, Duration};
-use chrono::prelude::*;
-use chrono::TimeZone;
+use chrono::{prelude::*, TimeZone};
 use tokio;
 use plotters::{prelude::*, style::full_palette::ORANGE};
 
@@ -94,6 +93,12 @@ fn plot_stock_data(symbol: &str, data: &[(f64, f64, f64, f64, f64)]) -> Result<(
             )
         })
     )?;
+
+    println!("\nVolatile Days (more than 2% variation):");
+    for (date, _, high, low, percent_change) in volatile_data {
+        println!("{}: High: ${:.2}, Low: ${:.2}, {:.2}% change", to_date(date), high, low, percent_change);
+    }
+
     Ok(())
 }
 
