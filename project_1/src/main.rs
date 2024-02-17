@@ -48,6 +48,40 @@ fn plot_stock_data(symbol: &str, data: &[(f64, f64, f64, f64, f64)]) -> Result<(
         data.iter().map(|x| (x.0, x.1)),
         &ORANGE,
     ))?;
+    chart.draw_series(
+        volatile_data.iter().map(|x| {
+            PathElement::new(
+                vec![(x.0, x.2), (x.0, x.3)],
+                &BLUE,
+            )
+        })
+    )?;
+    chart.draw_series(
+        volatile_data.iter().map(|x| {
+            Circle::new(
+                (x.0, x.1),
+                3,
+                &BLUE,
+            )
+        })
+    )?;
+    let offset = 100000.0;
+    chart.draw_series(
+        volatile_data.iter().map(|x| {
+            PathElement::new(
+                vec![((x.0)-offset, x.2), ((x.0)+offset, x.2)],
+                &BLUE,
+            )
+        })
+    )?;
+    chart.draw_series(
+        volatile_data.iter().map(|x| {
+            PathElement::new(
+                vec![((x.0)-offset, x.3), ((x.0)+offset, x.3)],
+                &BLUE,
+            )
+        })
+    )?;
     Ok(())
 }
 
@@ -59,6 +93,8 @@ async fn main() {
         let mut symbol = String::new();
         io::stdin().read_line(&mut symbol).expect("Failed to read line");
 
+        let len = symbol.len();
+        symbol.truncate(len - 1);
         if symbol.trim().to_lowercase() == "quit" {
             break;
         }
