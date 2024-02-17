@@ -1,6 +1,8 @@
 use std::io;
 use yahoo_finance_api as yahoo;
 use time::{OffsetDateTime, Duration};
+use chrono::prelude::*;
+use chrono::TimeZone;
 use tokio;
 use plotters::{prelude::*, style::full_palette::ORANGE};
 
@@ -23,7 +25,7 @@ async fn fetch_stock_data(symbol: &str) -> Result<Vec<(f64, f64, f64, f64, f64)>
 
 fn plot_stock_data(symbol: &str, data: &[(f64, f64, f64, f64, f64)]) -> Result<(), Box<dyn std::error::Error>> {
     let file_name = format!("{}_chart.png", symbol);
-    let root = BitMapBackend::new(&file_name, (640, 480)).into_drawing_area();
+    let root = BitMapBackend::new(&file_name, (1280, 960)).into_drawing_area();
     root.fill(&WHITE)?;
     let min_date = data.iter().map(|x| x.0).fold(f64::INFINITY, f64::min);
     let max_date = data.iter().map(|x| x.0).fold(f64::NEG_INFINITY, f64::max);
@@ -36,14 +38,24 @@ fn plot_stock_data(symbol: &str, data: &[(f64, f64, f64, f64, f64)]) -> Result<(
         .cloned()
         .collect();
 
+    let to_date = |x: f64| -> String {
+        let datetime = Utc.timestamp_opt(x as i64, 0)
+            .single()
+            .expect("Invalid timestamp");
+        datetime.format("%Y-%m-%d").to_string()
+    };
+
     let mut chart = ChartBuilder::on(&root)
         .caption(format!("Closing Prices: {}", symbol), ("sans-serif", 50).into_font())
-        .margin(5)
-        .x_label_area_size(30)
-        .y_label_area_size(30)
+        .margin(25)
+        .x_label_area_size(40)
+        .y_label_area_size(40)
         .build_cartesian_2d(min_date..max_date, min_price..max_price)?;
 
-    chart.configure_mesh().draw()?;
+    chart.configure_mesh()
+        .x_labels(15)
+        .x_label_formatter(&|x| to_date(*x))
+        .draw()?;
     chart.draw_series(LineSeries::new(
         data.iter().map(|x| (x.0, x.1)),
         &ORANGE,
