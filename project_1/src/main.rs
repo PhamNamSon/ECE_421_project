@@ -56,6 +56,30 @@ fn plot_stock_data(symbol: &str, data: &[(f64, f64, f64, f64, f64)]) -> Result<(
             )
         })
     )?;
+    chart.draw_series(volatile_data.iter().map(|x| {
+        Circle::new(
+            (x.0, x.1),
+            3,
+            &BLUE,
+        )
+    }))?;
+    let offset = 100000.0;
+    chart.draw_series(
+        volatile_data.iter().map(|x| {
+            PathElement::new(
+                vec![((x.0)-offset, x.2), ((x.0)+offset, x.2)],
+                &BLUE,
+            )
+        })
+    )?;
+    chart.draw_series(
+        volatile_data.iter().map(|x| {
+            PathElement::new(
+                vec![((x.0)-offset, x.3), ((x.0)+offset, x.3)],
+                &BLUE,
+            )
+        })
+    )?;
     Ok(())
 }
 
