@@ -152,11 +152,11 @@ impl AVLTree {
                         let left_node_borrow = left_node.borrow();
                         if val < left_node_borrow.val {
                             // Left Left Case
-                            //self.rotate_right(Some(node.clone())); // Rotate and return
+                            self.rotate_right(Some(node.clone())); // Rotate and return
                         } else {
                             // Left Right Case
                             self.rotate_left(Some(left_node.clone()));
-                            //self.rotate_right(Some(node.clone())); // Rotate and return
+                            self.rotate_right(Some(node.clone())); // Rotate and return
                         }
                     }
                 } else if balance < -1 {
@@ -167,7 +167,7 @@ impl AVLTree {
                             self.rotate_left(Some(node.clone())); // Rotate and return
                         } else {
                             // Right Left Case
-                            //self.rotate_right(Some(right_node.clone()));
+                            self.rotate_right(Some(right_node.clone()));
                             self.rotate_left(Some(node.clone())); // Rotate and return
                         }
                     }
