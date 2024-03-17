@@ -116,26 +116,30 @@ impl AVLTree {
         }
     }
 
-    pub fn insert(&mut self, mut root: Option<Rc<RefCell<Node>>>, val: i64) {
+    pub fn insert_pub(&mut self, val: i64) -> Option<Rc<RefCell<Node>>> {
+        self.insert(self.root.clone(), val)
+    }
+    
+    pub fn insert(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
         let new_node = Rc::new(RefCell::new(Node::new(val, 1))); // New node with height 1
-        
         match root {
             None => {
-                self.root = Some(new_node);
+                self.root = Some(new_node.clone());
+                Some(new_node)
             }
-            Some(ref node) => {
+            Some(node) => {
                 let mut current_node = node.borrow_mut();
                 if val < current_node.val {
                     if current_node.left.is_none() {
                         current_node.left = Some(new_node.clone());
                     } else {
-                        self.insert(current_node.left.clone(), val);
+                        current_node.left = self.insert(current_node.left.take(), val);
                     }
                 } else if val > current_node.val {
                     if current_node.right.is_none() {
                         current_node.right = Some(new_node.clone());
                     } else {
-                        self.insert(current_node.right.clone(), val);
+                        current_node.right = self.insert(current_node.right.take(), val);
                     }
                 }
 
@@ -148,30 +152,33 @@ impl AVLTree {
                 let balance = current_node.get_balance_factor();
 
                 if balance > 1 {
-                    if let Some(left_node) = &current_node.left {
-                        let left_node_borrow = left_node.borrow();
-                        if val < left_node_borrow.val {
+                    if let Some(left_node) = &mut current_node.left {
+                        if val < left_node.borrow().val {
                             // Left Left Case
-                            self.rotate_right(Some(node.clone())); // Rotate and return
+                            return self.rotate_right(Some(node.clone())); // Rotate and return
                         } else {
                             // Left Right Case
-                            self.rotate_left(Some(left_node.clone()));
-                            self.rotate_right(Some(node.clone())); // Rotate and return
+                            if let Some(rotated_node) = self.rotate_left(Some(left_node.clone())) {
+                                *left_node = rotated_node;
+                            }
+                            return self.rotate_right(Some(node.clone())); // Rotate and return
                         }
                     }
                 } else if balance < -1 {
-                    if let Some(right_node) = &current_node.right {
-                        let right_node_borrow = right_node.borrow();
-                        if val > right_node_borrow.val {
+                    if let Some(right_node) = &mut current_node.right {
+                        if val > right_node.borrow().val {
                             // Right Right Case
-                            self.rotate_left(Some(node.clone())); // Rotate and return
+                            return self.rotate_left(Some(node.clone())); // Rotate and return
                         } else {
                             // Right Left Case
-                            self.rotate_right(Some(right_node.clone()));
-                            self.rotate_left(Some(node.clone())); // Rotate and return
+                            if let Some(rotated_node) = self.rotate_right(Some(right_node.clone())) {
+                                *right_node = rotated_node;
+                            }
+                            return self.rotate_left(Some(node.clone())); // Rotate and return
                         }
                     }
                 }
+                Some(Rc::clone(&node))
             }
         }
     }
