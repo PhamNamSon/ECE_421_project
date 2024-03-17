@@ -1,3 +1,10 @@
+mod avl_tree;
+
+use avl_tree::AVLTree;
+
 fn main() {
-    println!("Hello, world!");
+    let tree = AVLTree::new();
+    if tree.is_empty() {
+        println!("Hello, world!");
+    }
 }
