@@ -40,39 +40,36 @@ impl AVLTree {
     }
 
     fn rotate_left(&mut self, mut x: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
-        // Some(ref mut a): a is an Rc
-        if let Some(ref mut x_node) = x {
-            
-            // Move the right child out
-            if let Some(ref mut y) = x_node.borrow_mut().right {
-                if let Some(ref mut y_left) = y.borrow_mut().left {
-                    x_node.borrow_mut().right = Some(Rc::clone(y_left)); // Set x's right child to y's left child
-                    y.borrow_mut().left = Some(Rc::clone(x_node)); // Move x into y's left child
-
+        if let Some(x_node) = x.take() {
+            let y = x_node.borrow_mut().right.take();
+            if let Some(y_ref_cell) = y.clone() {
+                let mut y_node = y_ref_cell.borrow_mut();
+                if let Some(y_left) = y_node.left.take() {
+                    x_node.borrow_mut().right = Some(Rc::clone(&y_left));
+                    y_node.left = Some(x_node.clone());
+    
                     // Update heights
                     let x_node_height = 1 + std::cmp::max(
                         x_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
                         x_node.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
                     );
-
+    
                     let y_height = 1 + std::cmp::max(
-                        y.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                        y.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
+                        y_node.left.as_ref().map_or(0, |n| n.borrow().height),
+                        y_node.right.as_ref().map_or(0, |n| n.borrow().height),
                     );
-
+    
                     x_node.borrow_mut().height = x_node_height;
-                    y.borrow_mut().height = y_height;
-
-                    Some(Rc::clone(y))
+                    y_node.height = y_height;
+    
+                    Some(y_left)
                 } else {
-                    // Restore x_node's right child if y_left is None
-                    x_node.borrow_mut().right = Some(Rc::clone(y));
-                    Some(Rc::clone(x_node))
+                    x_node.borrow_mut().right = Some(Rc::clone(&y_ref_cell));
+                    Some(x_node)
                 }
             } else {
-                // Restore x if its right child is None
-                Some(Rc::clone(x_node))
-            } 
+                Some(x_node)
+            }
         } else {
             None
         }
@@ -119,7 +116,7 @@ impl AVLTree {
     pub fn insert_pub(&mut self, val: i64) -> Option<Rc<RefCell<Node>>> {
         self.insert(self.root.clone(), val)
     }
-    
+
     pub fn insert(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
         let new_node = Rc::new(RefCell::new(Node::new(val, 1))); // New node with height 1
         match root {
