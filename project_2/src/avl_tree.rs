@@ -199,7 +199,15 @@ impl AVLTree {
     }
 
     pub fn print_traversal(&self) {
+        self.print_traversal_helper(&self.root);
+    }
 
+    fn print_traversal_helper(&self, node: &Option<Rc<RefCell<Node>>>) {
+        if let Some(ref current) = node {
+            self.print_traversal_helper(&current.borrow().left);
+            println!("{}", current.borrow().val);
+            self.print_traversal_helper(&current.borrow().right);
+        }
     }
 
     pub fn is_empty(&self) -> bool {
