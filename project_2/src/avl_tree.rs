@@ -115,8 +115,8 @@ impl AVLTree {
         }
     }
 
-    pub fn insert_pub(&mut self, val: i64) -> Option<Rc<RefCell<Node>>> {
-        self.insert(self.root.clone(), val)
+    pub fn insert_pub(&mut self, val: i64) {
+        self.insert(self.root.clone(), val);
     }
 
     pub fn insert(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
@@ -149,34 +149,35 @@ impl AVLTree {
                 );
 
                 let balance = current_node.get_balance_factor();
-
+                println!("{}", balance);
                 if balance > 1 {
                     if let Some(left_node) = &mut current_node.left {
                         if val < left_node.borrow().val {
                             // Left Left Case
-                            return self.rotate_right(Some(node.clone())); // Rotate and return
+                            return self.rotate_right(current_node.left.take()); // Rotate and return (prev node.clone())
                         } else {
                             // Left Right Case
-                            if let Some(rotated_node) = self.rotate_left(Some(left_node.clone())) {
+                            if let Some(rotated_node) = self.rotate_left(Some(left_node.clone())) { // prev left_node.clone()
                                 *left_node = rotated_node;
                             }
-                            return self.rotate_right(Some(node.clone())); // Rotate and return
+                            return self.rotate_right(current_node.left.take()); // Rotate and return (prev node.clone())
                         }
                     }
                 } else if balance < -1 {
                     if let Some(right_node) = &mut current_node.right {
                         if val > right_node.borrow().val {
                             // Right Right Case
-                            return self.rotate_left(Some(node.clone())); // Rotate and return
+                            return self.rotate_left(current_node.right.take()); // Rotate and return (prev node.clone())
                         } else {
                             // Right Left Case
                             if let Some(rotated_node) = self.rotate_right(Some(right_node.clone())) {
                                 *right_node = rotated_node;
                             }
-                            return self.rotate_left(Some(node.clone())); // Rotate and return
+                            return self.rotate_left(current_node.right.take()); // Rotate and return (prev node.clone())
                         }
                     }
                 }
+                
                 Some(Rc::clone(&node))
             }
         }
@@ -227,8 +228,25 @@ impl AVLTree {
         self.root.is_none()
     }
 
-    pub fn print_tree(&self) {
+    fn print_node(node: &Node, depth: usize) {
+        if let Some(right) = &node.right {
+            let right_ref = &*right.borrow();
+            Self::print_node(right_ref, depth + 1);
+        }
+    
+        println!("{:indent$}{}", "", node.val, indent = depth * 4);
+    
+        if let Some(left) = &node.left {
+            let left_ref = &*left.borrow();
+            Self::print_node(left_ref, depth + 1);
+        }
+    }
 
+    pub fn print_tree(&self) {
+        match &self.root { 
+            Some(node) => {Self::print_node(&*node.borrow(), 0)},
+            None => {}
+        }
     }
 
 }

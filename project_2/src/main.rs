@@ -4,18 +4,11 @@ use avl_tree::AVLTree;
 
 fn main() {
     let mut tree = AVLTree::new();
-    //println!("{}", tree.get_height());
-    tree.insert_pub(16);
-    //println!("{}", tree.get_height());
-    //tree.insert_pub(17);
-    //println!("{}", tree.get_height());
-    //tree.insert_pub(15);
-    //println!("{}", tree.get_height());
-    //tree.insert_pub(5);
-    //println!("{}", tree.get_height());
-    //tree.insert_pub(6);
-    //println!("{}", tree.get_height());
+    tree.insert_pub(2);
+    tree.insert_pub(3);
+    tree.insert_pub(6);
+    tree.insert_pub(5);
 
-    tree.print_traversal();
-    println!("{}", tree.count_leaves());
+    tree.print_tree();
+    //println!("{}", tree.count_leaves());
 }
