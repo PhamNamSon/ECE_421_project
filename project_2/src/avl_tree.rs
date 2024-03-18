@@ -45,30 +45,28 @@ impl AVLTree {
             
             // Move the right child out
             if let Some(ref mut y) = x_node.borrow_mut().right {
+
                 if let Some(ref mut y_left) = y.borrow_mut().left {
                     x_node.borrow_mut().right = Some(Rc::clone(y_left)); // Set x's right child to y's left child
-                    y.borrow_mut().left = Some(Rc::clone(x_node)); // Move x into y's left child
-
-                    // Update heights
-                    let x_node_height = 1 + std::cmp::max(
-                        x_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                        x_node.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
-                    );
-
-                    let y_height = 1 + std::cmp::max(
-                        y.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                        y.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
-                    );
-
-                    x_node.borrow_mut().height = x_node_height;
-                    y.borrow_mut().height = y_height;
-
-                    Some(Rc::clone(y))
-                } else {
-                    // Restore x_node's right child if y_left is None
-                    x_node.borrow_mut().right = Some(Rc::clone(y));
-                    Some(Rc::clone(x_node))
                 }
+                    
+                y.borrow_mut().left = Some(Rc::clone(x_node)); // Move x into y's left child
+
+                // Update heights
+                let x_node_height = 1 + std::cmp::max(
+                    x_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
+                    x_node.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
+                );
+
+                let y_height = 1 + std::cmp::max(
+                    y.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
+                    y.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
+                );
+
+                x_node.borrow_mut().height = x_node_height;
+                y.borrow_mut().height = y_height;
+
+                Some(Rc::clone(y))
             } else {
                 // Restore x if its right child is None
                 Some(Rc::clone(x_node))
@@ -82,31 +80,28 @@ impl AVLTree {
         if let Some(ref mut y_node) = y {
 
             if let Some(ref mut x) = y_node.borrow_mut().left {
-                if let Some(ref mut x_right) = x.borrow_mut().right {
-                    
+
+                if let Some(ref mut x_right) = x.borrow_mut().right {                    
                     y_node.borrow_mut().left = Some(Rc::clone(x_right));
-                    x.borrow_mut().right = Some(Rc::clone(y_node));
-    
-                    // Update heights
-                    let y_node_height = 1 + std::cmp::max(
-                        y_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                        y_node.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
-                    );
-    
-                    let x_height = 1 + std::cmp::max(
-                        x.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                        x.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
-                    );
-    
-                    y_node.borrow_mut().height = y_node_height;
-                    x.borrow_mut().height = x_height;
-    
-                    Some(Rc::clone(x))
-                } else {
-                    // Restore y_node's left child if x_right is None
-                    y_node.borrow_mut().left = Some(Rc::clone(x));
-                    Some(Rc::clone(y_node))
                 }
+
+                x.borrow_mut().right = Some(Rc::clone(y_node));
+
+                // Update heights
+                let y_node_height = 1 + std::cmp::max(
+                    y_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
+                    y_node.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
+                );
+
+                let x_height = 1 + std::cmp::max(
+                    x.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
+                    x.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
+                );
+
+                y_node.borrow_mut().height = y_node_height;
+                x.borrow_mut().height = x_height;
+
+                Some(Rc::clone(x))
             } else {
                 // Restore y if its left child is None
                 Some(Rc::clone(y_node))
@@ -176,8 +171,78 @@ impl AVLTree {
         }
     }
     
-    pub fn delete(&self, val: i64) {
+    pub fn delete(&mut self, val: i64) {
 
+        fn df(node: Option<Rc<RefCell<Node>>>, val: i64 ) -> Option<Rc<RefCell<Node>>> {
+            if let Some(ref node_ref) = node {
+                let mut current_node = node_ref.borrow_mut();
+                if val > current_node.val && !current_node.right.is_none() {
+                    current_node.right = df(current_node.right.take(), val);
+                } else if val < current_node.val && !current_node.left.is_none(){
+                    current_node.left = df(current_node.left.take(), val);
+                } else {
+                    //Case 1: No left Child
+                    if current_node.left.is_none() { //If there is no left child take the right child
+                        return current_node.right.take() //If there is no right child, this will return None
+
+                    //Case 2: No Right Child
+                    } else if current_node.right.is_none() { //If there is no right child, take the left child
+                        return current_node.left.take() //If there is no left child either, this will return None
+
+                    //Case 3: Both children
+                    } else if let Some(ref right_node) = current_node.right.as_ref() {
+
+                        let mut min_node = right_node.borrow();
+
+                        // while let Some(ref left_node) = min_node.left.as_ref() {
+                        //     min_node = left_node.borrow();
+                        // }
+
+
+
+                        current_node.val = min_node.val;
+                        current_node.right = df(current_node.right.take(), min_node.val);
+                    }
+
+                };
+                // Set node's height
+                current_node.height = 1 + std::cmp::max(
+                    current_node.left.as_ref().map_or(0, |n| n.borrow().height), // Node's height or 0 if node is None
+                    current_node.right.as_ref().map_or(0, |n| n.borrow().height),
+                );
+
+                // let balance = current_node.get_balance_factor();
+
+                // if balance > 1 {
+                //     if let Some(left_node) = &current_node.left {
+                //         let left_node_borrow = left_node.borrow();
+                //         if val < left_node_borrow.val {
+                //             // Left Left Case
+                //             //self.rotate_right(Some(node.clone())); // Rotate and return
+                //         } else {
+                //             // Left Right Case
+                //             &current_node.rotate_left(Some(left_node.clone()));
+                //             //self.rotate_right(Some(node.clone())); // Rotate and return
+                //         }
+                //     }
+                // } else if balance < -1 {
+                //     if let Some(right_node) = &current_node.right {
+                //         let right_node_borrow = right_node.borrow();
+                //         if val > right_node_borrow.val {
+                //             // Right Right Case
+                //             &current_node.rotate_left(Some(current_node.clone())); // Rotate and return
+                //         } else {
+                //             // Right Left Case
+                //             //self.rotate_right(Some(right_node.clone()));
+                //             &current_node.rotate_left(Some(current_node.clone())); // Rotate and return
+                //         }
+                //     }
+                // }
+            }   
+            Some(Rc::new(RefCell::new(Node::new(0, 0)))) // Dummy return, will never be used         
+        }
+
+        df(self.root.clone(), val);
     }
 
     pub fn get_num_leaves(&self) -> i64 {
