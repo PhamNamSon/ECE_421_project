@@ -186,8 +186,21 @@ impl AVLTree {
 
     }
 
-    pub fn get_num_leaves(&self) -> i64 {
-        2 // Replace with height
+    pub fn count_leaves(&self) -> i64 {
+        self.count_leaves_helper(&self.root)
+    }
+
+    fn count_leaves_helper(&self, node: &Option<Rc<RefCell<Node>>>) -> i64 {
+        if let Some(ref current) = node {
+            let left_count = self.count_leaves_helper(&current.borrow().left);
+            let right_count = self.count_leaves_helper(&current.borrow().right);
+            if current.borrow().left.is_none() && current.borrow().right.is_none() {
+                return left_count + right_count + 1; // Add 1 for the current leaf node
+            } else {
+                return left_count + right_count;
+            }
+        }
+        0 // Empty tree
     }
 
     pub fn get_height(&self) -> i64 {

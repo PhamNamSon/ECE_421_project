@@ -7,14 +7,15 @@ fn main() {
     //println!("{}", tree.get_height());
     tree.insert_pub(16);
     //println!("{}", tree.get_height());
-    tree.insert_pub(17);
+    //tree.insert_pub(17);
     //println!("{}", tree.get_height());
-    tree.insert_pub(15);
+    //tree.insert_pub(15);
     //println!("{}", tree.get_height());
-    tree.insert_pub(5);
+    //tree.insert_pub(5);
     //println!("{}", tree.get_height());
     //tree.insert_pub(6);
     //println!("{}", tree.get_height());
 
     tree.print_traversal();
+    println!("{}", tree.count_leaves());
 }
