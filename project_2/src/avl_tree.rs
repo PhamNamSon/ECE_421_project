@@ -39,11 +39,16 @@ impl AVLTree {
         Self { root: None }
     }
 
-    fn rotate_left(&mut self, mut x: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
+    fn rotate_left(&mut self, x: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
         println!("ROTATE LEFT");
-        if let Some(x_node) = x.take() {
-            let y = x_node.borrow_mut().right.take();
-            if let Some(y_ref_cell) = y.clone() {
+        if let Some(ref x_node) = x {
+            println!("1");
+            //let mut x_node_borrowed = x_node.borrow_mut();
+            println!("2");
+            let y = x_node.borrow().right.clone();
+            println!("2");
+            if let Some(ref y_ref_cell) = y {
+                println!("3");
                 let mut y_node = y_ref_cell.borrow_mut();
                 if let Some(y_left) = y_node.left.take() {
                     x_node.borrow_mut().right = Some(Rc::clone(&y_left));
@@ -65,11 +70,12 @@ impl AVLTree {
     
                     Some(y_left)
                 } else {
+                    //println!("TEST LEFT");
                     x_node.borrow_mut().right = Some(Rc::clone(&y_ref_cell));
-                    Some(x_node)
+                    Some(x_node.clone())
                 }
             } else {
-                Some(x_node)
+                Some(x_node.clone())
             }
         } else {
             None
@@ -103,6 +109,7 @@ impl AVLTree {
                     Some(x_right)
                 } else {
                     // Restore y_node's left child if x_right is None
+                    //println!("TEST RIGHT");
                     y_node.borrow_mut().left = Some(Rc::clone(&x_ref_cell));
                     Some(y_node)
                 }
@@ -127,14 +134,16 @@ impl AVLTree {
                 Some(new_node)
             }
             Some(node) => {
-                let mut current_node = node.borrow_mut();
-                if val < current_node.val {
+                //let mut current_node = node.borrow_mut();
+                if val < node.borrow().val {
+                    let mut current_node = node.borrow_mut();
                     if current_node.left.is_none() {
                         current_node.left = Some(new_node.clone());
                     } else {
                         current_node.left = self.insert(current_node.left.take(), val);
                     }
-                } else if val > current_node.val {
+                } else if val > node.borrow().val {
+                    let mut current_node = node.borrow_mut();
                     if current_node.right.is_none() {
                         current_node.right = Some(new_node.clone());
                     } else {
@@ -142,38 +151,52 @@ impl AVLTree {
                     }
                 }
 
-                // Set node's height
-                current_node.height = 1 + std::cmp::max(
-                    current_node.left.as_ref().map_or(0, |n| n.borrow().height), // Node's height or 0 if node is None
-                    current_node.right.as_ref().map_or(0, |n| n.borrow().height),
-                );
+                {
+                    let mut node_borrow = node.borrow_mut();
+                    // Set node's height
+                    node_borrow.height = 1 + std::cmp::max(
+                        node_borrow.left.as_ref().map_or(0, |n| n.borrow().height), // Node's height or 0 if node is None
+                        node_borrow.right.as_ref().map_or(0, |n| n.borrow().height),
+                    );
+                }
+                
 
-                let balance = current_node.get_balance_factor();
+                let balance = node.borrow().get_balance_factor();
                 println!("{}", balance);
                 if balance > 1 {
-                    if let Some(left_node) = &mut current_node.left {
+                    if let Some(left_node) = &mut node.borrow_mut().left {
                         if val < left_node.borrow().val {
                             // Left Left Case
-                            return self.rotate_right(current_node.left.take()); // Rotate and return (prev node.clone())
+                            println!("LEFT LEFT");
+                            return self.rotate_right(Some(node.clone())); // Rotate and return (prev node.clone())
                         } else {
                             // Left Right Case
+                            println!("LEFT RIGHT");
                             if let Some(rotated_node) = self.rotate_left(Some(left_node.clone())) { // prev left_node.clone()
                                 *left_node = rotated_node;
                             }
-                            return self.rotate_right(current_node.left.take()); // Rotate and return (prev node.clone())
+                            //return self.rotate_right(current_node.left.take()); // Rotate and return (prev node.clone())
+                            return self.rotate_right(Some(node.clone()));
                         }
                     }
                 } else if balance < -1 {
-                    if let Some(right_node) = &mut current_node.right {
+                    if let Some(right_node) = &node.borrow().right {
                         if val > right_node.borrow().val {
                             // Right Right Case
-                            return self.rotate_left(current_node.right.take()); // Rotate and return (prev node.clone())
+                            println!("RIGHT RIGHT");
+
+                            return self.rotate_left(Some(node.clone())); // Rotate and return (prev node.clone())
                         } else {
                             // Right Left Case
-                            if let Some(rotated_node) = self.rotate_right(Some(right_node.clone())) {
-                                *right_node = rotated_node;
+                            println!("RIGHT LEFT");
+                            if let Some(right_node_mut) = &mut node.borrow_mut().right {
+                                if let Some(rotated_node) = self.rotate_right(Some(right_node_mut.clone())) {
+                                    *right_node_mut = rotated_node;
+                                }
+                                //return self.rotate_left(current_node.right.take()); // Rotate and return (prev node.clone())
+                                return self.rotate_left(Some(node.clone()));
                             }
-                            return self.rotate_left(current_node.right.take()); // Rotate and return (prev node.clone())
+                            
                         }
                     }
                 }
