@@ -62,5 +62,4 @@ fn main() {
 
     let search = tree.search_tree(10);
     println!("\nValue 10: {}", search.unwrap_or(Rc::new(RefCell::new(Node::new(-1, 0)))).borrow().get_val());
-
 }
