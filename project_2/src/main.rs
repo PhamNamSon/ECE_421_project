@@ -17,7 +17,13 @@ fn main() {
     tree.insert_pub(3);
     tree.insert_pub(4);
     tree.insert_pub(6);
-
     tree.print_tree();
+    tree.delete(24);
+    println!("Delete 24:");
+    tree.print_tree();
+
+    tree.delete(2); 
+    println!("Delete 2:");
+    tree.print_tree()
 
 }

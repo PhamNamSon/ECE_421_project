@@ -17,6 +17,18 @@ impl Node {
         Self { val, height, left: None, right: None }
     }
 
+    pub fn get_val(&self) -> i64 {
+        return self.val;
+    }
+
+    pub fn set_left_child(&mut self, child: Option<Rc<RefCell<Node>>>) {
+        self.left = child;
+    }
+
+    pub fn set_right_child(&mut self, child: Option<Rc<RefCell<Node>>>) {
+        self.right = child;
+    }
+
     fn get_balance_factor(&self) -> i64 {
         let left_height = if let Some(ref left) = self.left {
             left.borrow().height
@@ -39,8 +51,16 @@ impl AVLTree {
         Self { root: None }
     }
 
-    // Right rotation
-    fn rotate_right(&mut self, mut y: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
+    pub fn get_root(&self) -> Option<Rc<RefCell<Node>>>{
+        self.root.clone()
+    }
+
+    pub fn set_root(&mut self, root: Option<Rc<RefCell<Node>>>) {
+        self.root = root;
+    }
+
+     // Right rotation
+     fn rotate_right(&mut self, mut y: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
         if let Some(ref mut y_node) = y {
             let mut x = y_node.borrow_mut().left.take(); // Set x to be y's left child
             if let Some(ref mut x_node) = x {
@@ -187,26 +207,59 @@ impl AVLTree {
             current.borrow_mut().height = new_height;
         }
     }
-    
-    pub fn delete(&self, val: i64) {
 
+    pub fn delete(&mut self, val: i64) {
+        let root = self.root.take();
+        self.root = self.delete_node(root, val);
+        self.balance_tree();
     }
 
-    pub fn count_leaves(&self) -> i64 {
-        self.count_leaves_helper(&self.root)
-    }
+    fn delete_node(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
+        if let Some(ref node) = root {
+            {
+                let mut current_node = node.borrow_mut();
+                if val < current_node.val {
+                    current_node.left = self.delete_node(current_node.left.take(), val);
+                } else if val > current_node.val {
+                    current_node.right = self.delete_node(current_node.right.take(), val);
+                } else {
+                    // Node to delete found
+                    if current_node.left.is_none() {
+                        // Case 1: No left child or no child at all
+                        return current_node.right.take();
+                    } else if current_node.right.is_none() {
+                        // Case 2: No right child
+                        return current_node.left.take();
+                    } else {
+                        // Case 3: Node has both children
+                        let successor = self.find_min(&current_node.right);
+                        let successor_val = successor.borrow().val;
+                        current_node.val = successor_val;
+                        current_node.right = self.delete_node(current_node.right.take(), successor_val);
+                    }
+                }
 
-    fn count_leaves_helper(&self, node: &Option<Rc<RefCell<Node>>>) -> i64 {
-        if let Some(ref current) = node {
-            let left_count = self.count_leaves_helper(&current.borrow().left);
-            let right_count = self.count_leaves_helper(&current.borrow().right);
-            if current.borrow().left.is_none() && current.borrow().right.is_none() {
-                return left_count + right_count + 1; // Add 1 for the current leaf node
-            } else {
-                return left_count + right_count;
-            }
+                // Set node's height
+                current_node.height = 1 + std::cmp::max(
+                    current_node.left.as_ref().map_or(0, |n| n.borrow().height), // Node's height or 0 if node is None
+                    current_node.right.as_ref().map_or(0, |n| n.borrow().height),
+                );
+
+            };
         }
-        0 // Empty tree
+        root
+    }
+
+    fn find_min(&self, node: &Option<Rc<RefCell<Node>>>) -> Rc<RefCell<Node>> {
+        let mut current_node = node.clone();
+        while let Some(ref next_node) = current_node.clone().unwrap().borrow().left {
+            current_node = Some(Rc::clone(&next_node));
+        }
+        current_node.unwrap()
+    }
+
+    pub fn get_num_leaves(&self) -> i64 {
+        2 // Replace with height
     }
 
     pub fn get_height(&self) -> i64 {
@@ -224,7 +277,8 @@ impl AVLTree {
     fn print_traversal_helper(&self, node: &Option<Rc<RefCell<Node>>>) {
         if let Some(ref current) = node {
             self.print_traversal_helper(&current.borrow().left);
-            println!("{}", current.borrow().val);
+            //println!("{}", current.borrow().val);
+            println!("Value: {}, Height: {}", current.borrow().val, current.borrow().height);
             self.print_traversal_helper(&current.borrow().right);
         }
     }
@@ -252,6 +306,25 @@ impl AVLTree {
             Some(node) => {Self::print_node(&*node.borrow(), 0)},
             None => {}
         }
+    }
+
+    pub fn search_tree(&self, val: i64) -> Option<Rc<RefCell<Node>>> {
+        fn df(n: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
+            if let Some(ref node) = n {
+                let mut current_node = node.borrow_mut();
+                if val < current_node.val  && !current_node.left.is_none() {
+                    df(current_node.left.take(), val);
+                } else if val > current_node.val && !current_node.right.is_none() {
+                    df(current_node.right.take(), val);
+                } else {
+                    return Some(Rc::clone(node));
+                }
+            }
+            None
+        }
+
+        let root = self.root.clone();
+        df(root, val)
     }
 
 }
