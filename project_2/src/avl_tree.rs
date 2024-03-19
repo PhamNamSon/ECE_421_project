@@ -17,6 +17,10 @@ impl Node {
         Self { val, height, left: None, right: None }
     }
 
+    pub fn get_val(&self) -> i64 {
+        return self.val;
+    }
+
     pub fn set_left_child(&mut self, child: Option<Rc<RefCell<Node>>>) {
         self.left = child;
     }
@@ -311,6 +315,25 @@ impl AVLTree {
             Some(node) => {Self::print_node(&*node.borrow(), 0)},
             None => {}
         }
+    }
+
+    pub fn search_tree(&self, val: i64) -> Option<Rc<RefCell<Node>>> {
+        fn df(n: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
+            if let Some(ref node) = n {
+                let mut current_node = node.borrow_mut();
+                if val < current_node.val  && !current_node.left.is_none() {
+                    df(current_node.left.take(), val);
+                } else if val > current_node.val && !current_node.right.is_none() {
+                    df(current_node.right.take(), val);
+                } else {
+                    return Some(Rc::clone(node));
+                }
+            }
+            None
+        }
+
+        let root = self.root.clone();
+        df(root, val)
     }
 
 }

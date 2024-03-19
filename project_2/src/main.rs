@@ -1,10 +1,10 @@
 mod avl_tree;
+
 use avl_tree::AVLTree;
 use avl_tree::Node;
 use std::cell::RefCell;
 use std::rc::Rc;
-mod red_black_tree;
-use red_black_tree::RedBlackTree;
+
 
 fn main() {
     // let mut tree = AVLTree::new();
@@ -60,31 +60,6 @@ fn main() {
     println!("\nAVL Tree after deleting node with value {}:", value_to_delete);
     tree.print_tree();
 
-
-    let mut tree = RedBlackTree::new();
-    // tree.insert(12);
-    // tree.insert(8);
-    // tree.insert(15);
-    // tree.insert(5);
-    // tree.insert(9);
-    // tree.insert(13);
-    // tree.insert(19);
-    // tree.insert(10);
-    // tree.insert(23);
-    // tree.delete(19);
-    // tree.insert(1);
-    // tree.delete(5);
-    // tree.delete(12);
-
-    tree.insert(20);
-    tree.insert(10);
-    tree.insert(30);
-    tree.insert(25);
-    tree.insert(35);
-    tree.delete(10);
-
-    // println!("Number of leaves: {}", tree.count_leaves());
-    // println!("Height of the tree: {}", tree.height());
-    // println!("Empty: {}", tree.is_empty());
-    tree.print_in_order();
+    let search = tree.search_tree(10);
+    println!("\nValue 10: {}", search.unwrap_or(Rc::new(RefCell::new(Node::new(-1, 0)))).borrow().get_val());
 }
