@@ -52,11 +52,27 @@ impl AVLTree {
 
                     // Update heights
                     {
+                        //let mut x_node_borrow_mut = x_node.borrow_mut();
+
+                        let x_left_height = if let Some(x_node_left) = &x_node.borrow().left {
+                            x_node_left.borrow().height
+                        } else {
+                            0
+                        };
+
+                        let x_right_height = if let Some(x_node_right) = &x_node.borrow().left {
+                            x_node_right.borrow().height
+                        } else {
+                            0
+                        };
+
                         let mut x_node_borrow_mut = x_node.borrow_mut();
+
                         let x_node_height = 1 + std::cmp::max(
-                            x_node_borrow_mut.left.as_ref().map_or(0, |n| x_node_borrow_mut.height),
-                            x_node_borrow_mut.right.as_ref().map_or(0, |n| x_node_borrow_mut.height),
+                            x_left_height,
+                            x_right_height,
                         );
+
                         x_node_borrow_mut.height = x_node_height;
                     }
                     
@@ -71,16 +87,34 @@ impl AVLTree {
                     //Some(y_left) // change maybe?
                     x_node.borrow_mut().right.take()
                 } else {
-                    y_node.left = Some(x_node.clone());
+                    y_node.left = Some(x_node.clone()); //y_node.left -> right left
                     x_node.borrow_mut().right = Some(Rc::clone(&y_ref_cell));
 
                     // Update heights
                     {
+                        //let mut x_node_borrow_mut = x_node.borrow_mut();
+
+                        let x_left_height = if let Some(x_node_left) = &x_node.borrow().left {
+                            x_node_left.borrow().height
+                        } else {
+                            0
+                        };
+
+                        let x_right_height = if let Some(x_node_right) = &x_node.borrow().left {
+                            x_node_right.borrow().height
+                        } else {
+                            0
+                        };
+
                         let mut x_node_borrow_mut = x_node.borrow_mut();
+
+                        
                         let x_node_height = 1 + std::cmp::max(
-                            x_node_borrow_mut.left.as_ref().map_or(0, |_n| x_node_borrow_mut.height),
-                            x_node_borrow_mut.right.as_ref().map_or(0, |_n| x_node_borrow_mut.height),
+                            x_left_height,
+                            x_right_height,
                         );
+
+
                         x_node_borrow_mut.height = x_node_height;
                     }
                     
@@ -111,38 +145,29 @@ impl AVLTree {
                 let mut x_node = x_ref_cell.borrow_mut();
                 if let Some(x_right) = x_node.right.take() {
                     println!("inner");
-                    y_node.borrow_mut().left = Some(Rc::clone(&x_right));
-                    x_node.right = Some(Rc::clone(&y_node));
-    
-                    // Update heights
-                    let y_node_height = 1 + std::cmp::max(
-                        y_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                        y_node.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
-                    );
-    
-                    let x_height = 1 + std::cmp::max(
-                        x_node.left.as_ref().map_or(0, |n| n.borrow().height),
-                        x_node.right.as_ref().map_or(0, |n| n.borrow().height),
-                    );
-    
-                    y_node.borrow_mut().height = y_node_height;
-                    x_node.height = x_height;
-    
-                    Some(x_right)
-                } else {
-                    println!("outer");
-                    //y_node.borrow_mut().left = Some(Rc::clone(&x_ref_cell));
-                    
                     x_node.right = Some(Rc::clone(&y_node));
                     y_node.borrow_mut().left = Some(Rc::clone(&x_ref_cell));
 
                     // Update heights
 
                     {
+                        let y_left_height = if let Some(y_node_left) = &y_node.borrow().left {
+                            y_node_left.borrow().height
+                        } else {
+                            0
+                        };
+
+                        let y_right_height = if let Some(y_node_right) = &y_node.borrow().left {
+                            y_node_right.borrow().height
+                        } else {
+                            0
+                        };
+
                         let mut y_node_borrow_mut = y_node.borrow_mut();
+
                         let y_node_height = 1 + std::cmp::max(
-                            y_node_borrow_mut.left.as_ref().map_or(0, |_n| y_node_borrow_mut.height),
-                            y_node_borrow_mut.right.as_ref().map_or(0, |_n| y_node_borrow_mut.height),
+                            y_left_height,
+                            y_right_height,
                         );
                         y_node_borrow_mut.height = y_node_height;
                     }
@@ -153,7 +178,46 @@ impl AVLTree {
                     );
 
                     x_node.height = x_height;
+                    
+                    y_node.borrow_mut().left.take()
+                } else {
+                    println!("outer");
+                    //y_node.borrow_mut().left = Some(Rc::clone(&x_ref_cell));
+                    
+                    x_node.right = Some(Rc::clone(&y_node));
+                    y_node.borrow_mut().left = Some(Rc::clone(&x_ref_cell));
 
+                    // Update heights
+
+                    {
+                        let y_left_height = if let Some(y_node_left) = &y_node.borrow().left {
+                            y_node_left.borrow().height
+                        } else {
+                            0
+                        };
+
+                        let y_right_height = if let Some(y_node_right) = &y_node.borrow().left {
+                            y_node_right.borrow().height
+                        } else {
+                            0
+                        };
+
+                        let mut y_node_borrow_mut = y_node.borrow_mut();
+
+                        let y_node_height = 1 + std::cmp::max(
+                            y_left_height,
+                            y_right_height,
+                        );
+                        y_node_borrow_mut.height = y_node_height;
+                    }
+                    
+                    let x_height = 1 + std::cmp::max(
+                        x_node.left.as_ref().map_or(0, |n| n.borrow().height),
+                        x_node.right.as_ref().map_or(0, |n| n.borrow().height),
+                    );
+
+                    x_node.height = x_height;
+                    
                     y_node.borrow_mut().left.take()
                     //Some(y_node)
                 }
@@ -179,7 +243,6 @@ impl AVLTree {
                 Some(new_node)
             }
             Some(node) => {
-                //let mut current_node = node.borrow_mut();
                 let node_val = node.borrow().val;
                 if val < node_val {
                     let mut current_node = node.borrow_mut();
@@ -249,6 +312,7 @@ impl AVLTree {
                     }
                 }
                 */
+                //println!("NODE: {}; HEIGHT: {}", node_val, node.borrow().height);
                 Some(Rc::clone(&node))
             }
         }
@@ -263,7 +327,7 @@ impl AVLTree {
                 let left_balance_factor = current.borrow().left.as_ref().map_or(0, |n| n.borrow().get_balance_factor());
                 
                 // Left-Right case
-                println!("LEFT HEAVY: {}", current.borrow().val);
+                //println!("LEFT HEAVY: {}; BALANCE: {}", current.borrow().val, balance_factor);
                 if left_balance_factor < 0 {
                     println!("LEFT RIGHT");
                     let left_child = current.borrow_mut().left.take();
@@ -272,9 +336,8 @@ impl AVLTree {
                 }
 
                 // Left-Left case
-                println!("LEFT LEFT");
-                //return self.rotate_right(Some(Rc::clone(current)));
-                return Some(current.clone())
+                //println!("LEFT LEFT");
+                return self.rotate_right(Some(Rc::clone(current)));
             }
 
             // Right heavy
@@ -282,7 +345,7 @@ impl AVLTree {
                 let right_balance_factor = current.borrow().right.as_ref().map_or(0, |n| n.borrow().get_balance_factor());
                 
                 // Right-Left case
-                println!("RIGHT HEAVY: {}", current.borrow().val);
+                //println!("RIGHT HEAVY: {}", current.borrow().val);
                 if right_balance_factor > 0 {
                     println!("RIGHT LEFT");
                     let right_child = current.borrow_mut().right.take();
@@ -291,7 +354,7 @@ impl AVLTree {
                 }
 
                 // Right-Right case
-                println!("RIGHT RIGHT");
+                //println!("RIGHT RIGHT");
                 return self.rotate_left(Some(Rc::clone(current)));
             }
 
