@@ -39,6 +39,7 @@ impl AVLTree {
         Self { root: None }
     }
 
+    // return new root
     fn rotate_left(&mut self, x: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
         println!("ROTATE LEFT");
         if let Some(ref x_node) = x {
@@ -51,9 +52,10 @@ impl AVLTree {
                 println!("3");
                 let mut y_node = y_ref_cell.borrow_mut();
                 if let Some(y_left) = y_node.left.take() {
-                    x_node.borrow_mut().right = Some(Rc::clone(&y_left));
+                    println!("4");
                     y_node.left = Some(x_node.clone());
-    
+                    x_node.borrow_mut().right = Some(Rc::clone(&y_left));
+                    
                     // Update heights
                     let x_node_height = 1 + std::cmp::max(
                         x_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
@@ -70,9 +72,27 @@ impl AVLTree {
     
                     Some(y_left)
                 } else {
-                    //println!("TEST LEFT");
+                    println!("5");
+                    y_node.left = Some(x_node.clone());
                     x_node.borrow_mut().right = Some(Rc::clone(&y_ref_cell));
-                    Some(x_node.clone())
+
+                    // Update heights
+                    /* 
+                    let x_node_height = 1 + std::cmp::max(
+                        x_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
+                        x_node.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
+                    );
+    
+                    let y_height = 1 + std::cmp::max(
+                        y_node.left.as_ref().map_or(0, |n| n.borrow().height),
+                        y_node.right.as_ref().map_or(0, |n| n.borrow().height),
+                    );
+    
+                    x_node.borrow_mut().height = x_node_height;
+                    y_node.height = y_height;
+                    */
+                    //Some(x_node.clone())
+                    x_node.borrow_mut().right.take()
                 }
             } else {
                 Some(x_node.clone())
