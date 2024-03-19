@@ -59,4 +59,8 @@ fn main() {
     // Print the tree after deletion
     println!("\nAVL Tree after deleting node with value {}:", value_to_delete);
     tree.print_tree();
+
+    let search = tree.search_tree(10);
+    println!("\nValue 10: {}", search.unwrap_or(Rc::new(RefCell::new(Node::new(-1, 0)))).borrow().get_val());
+
 }
