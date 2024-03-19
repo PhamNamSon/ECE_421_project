@@ -124,6 +124,7 @@ impl AVLTree {
 
     pub fn insert_pub(&mut self, val: i64) {
         self.insert(self.root.clone(), val);
+        self.balance_tree();
     }
 
     pub fn insert(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
@@ -135,7 +136,8 @@ impl AVLTree {
             }
             Some(node) => {
                 //let mut current_node = node.borrow_mut();
-                if val < node.borrow().val {
+                let node_val = node.borrow().val;
+                if val < node_val {
                     let mut current_node = node.borrow_mut();
                     if current_node.left.is_none() {
                         current_node.left = Some(new_node.clone());
@@ -158,9 +160,11 @@ impl AVLTree {
                         node_borrow.left.as_ref().map_or(0, |n| n.borrow().height), // Node's height or 0 if node is None
                         node_borrow.right.as_ref().map_or(0, |n| n.borrow().height),
                     );
+
+                    //println!("{}: {}", node_borrow.val, node_borrow.height);
                 }
                 
-
+                /* 
                 let balance = node.borrow().get_balance_factor();
                 println!("{}", balance);
                 if balance > 1 {
@@ -200,10 +204,66 @@ impl AVLTree {
                         }
                     }
                 }
-                
+                */
                 Some(Rc::clone(&node))
             }
         }
+    }
+
+    fn balance_subtree(&mut self, node: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
+        
+        if let Some(ref current) = node {
+            let balance_factor = current.borrow().get_balance_factor();
+            //println!("{}: {}", current.borrow().val, balance_factor);
+            // Left heavy
+            if balance_factor > 1 {
+                let left_balance_factor = current.borrow().left.as_ref().map_or(0, |n| n.borrow().get_balance_factor());
+                
+                // Left-Right case
+                println!("LEFT HEAVY");
+                if left_balance_factor < 0 {
+                    let left_child = current.borrow_mut().left.take();
+                    let new_left = self.rotate_left(left_child);
+                    current.borrow_mut().left = new_left.clone();
+                }
+
+                // Left-Left case
+                return self.rotate_right(Some(Rc::clone(current)));
+            }
+
+            // Right heavy
+            if balance_factor < -1 {
+                let right_balance_factor = current.borrow().right.as_ref().map_or(0, |n| n.borrow().get_balance_factor());
+                
+                // Right-Left case
+                println!("RIGHT HEAVY");
+                if right_balance_factor > 0 {
+                    let right_child = current.borrow_mut().right.take();
+                    let new_right = self.rotate_right(right_child);
+                    current.borrow_mut().right = new_right.clone();
+                }
+
+                // Right-Right case
+                return self.rotate_left(Some(Rc::clone(current)));
+            }
+
+            // Recursively balance children
+            let left = self.balance_subtree(current.borrow().left.clone());
+            current.borrow_mut().left = left.clone();
+
+            let right = self.balance_subtree(current.borrow().right.clone());
+            current.borrow_mut().right = right.clone();
+
+            Some(Rc::clone(current))
+        } else {
+            None
+        }
+    }
+
+    // Public function to balance the entire AVL tree
+    fn balance_tree(&mut self) {
+        let root = self.root.clone();
+        self.root = self.balance_subtree(root);
     }
     
     pub fn delete(&self, val: i64) {
