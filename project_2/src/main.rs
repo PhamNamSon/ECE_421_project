@@ -1,10 +1,10 @@
 mod avl_tree;
+
 use avl_tree::AVLTree;
 use avl_tree::Node;
 use std::cell::RefCell;
 use std::rc::Rc;
-mod red_black_tree;
-use red_black_tree::RedBlackTree;
+
 
 fn main() {
     // let mut tree = AVLTree::new();
@@ -73,4 +73,6 @@ fn main() {
     println!("Number of leaves: {}", tree.count_leaves());
     println!("Height of the tree: {}", tree.height());
     tree.print_in_order();
+    let search = tree.search_tree(10);
+    println!("\nValue 10: {}", search.unwrap_or(Rc::new(RefCell::new(Node::new(-1, 0)))).borrow().get_val());
 }
