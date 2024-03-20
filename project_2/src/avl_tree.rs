@@ -59,98 +59,183 @@ impl AVLTree {
         self.root = root;
     }
 
-    fn rotate_left(&mut self, mut x: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
-        // Some(ref mut a): a is an Rc
-        if let Some(ref mut x_node) = x {
-            
-            // Move the right child out
-            if let Some(ref mut y) = x_node.borrow_mut().right {
-
-                if let Some(ref mut y_left) = y.borrow_mut().left {
-                    x_node.borrow_mut().right = Some(Rc::clone(y_left)); // Set x's right child to y's left child
-                }
-                    
-                y.borrow_mut().left = Some(Rc::clone(x_node)); // Move x into y's left child
-
-                // Update heights
-                let x_node_height = 1 + std::cmp::max(
-                    x_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                    x_node.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
-                );
-
-                let y_height = 1 + std::cmp::max(
-                    y.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                    y.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
-                );
-
-                x_node.borrow_mut().height = x_node_height;
-                y.borrow_mut().height = y_height;
-
-                Some(Rc::clone(y))
-            } else {
-                // Restore x if its right child is None
-                Some(Rc::clone(x_node))
-            } 
-        } else {
-            None
-        }
-    }
-
-    fn rotate_right(&mut self, mut y: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
+     // Right rotation
+     fn rotate_right(&mut self, mut y: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
         if let Some(ref mut y_node) = y {
-
-            if let Some(ref mut x) = y_node.borrow_mut().left {
-
-                if let Some(ref mut x_right) = x.borrow_mut().right {                    
-                    y_node.borrow_mut().left = Some(Rc::clone(x_right));
-                }
-
-                x.borrow_mut().right = Some(Rc::clone(y_node));
-
+            let mut x = y_node.borrow_mut().left.take(); // Set x to be y's left child
+            if let Some(ref mut x_node) = x {
+                y_node.borrow_mut().left = x_node.borrow_mut().right.take(); // Turn x's right subtree into y's left subtree
+                x_node.borrow_mut().right = y.take(); // Make y the right child of x
                 // Update heights
-                let y_node_height = 1 + std::cmp::max(
-                    y_node.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                    y_node.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
-                );
-
-                let x_height = 1 + std::cmp::max(
-                    x.borrow().left.as_ref().map_or(0, |n| n.borrow().height),
-                    x.borrow().right.as_ref().map_or(0, |n| n.borrow().height),
-                );
-
-                y_node.borrow_mut().height = y_node_height;
-                x.borrow_mut().height = x_height;
-
-                Some(Rc::clone(x))
-            } else {
-                // Restore y if its left child is None
-                Some(Rc::clone(y_node))
+                self.update_heights_recursive(&x);
+                self.update_heights_recursive(&y);
+                return x; // Return the new root (x)
             }
-        } else {
-            None
         }
+        None
     }
 
-    pub fn insert(&mut self, mut root: Option<Rc<RefCell<Node>>>, val: i64) {
+    // Left rotation
+    fn rotate_left(&mut self, mut x: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
+        if let Some(ref mut x_node) = x {
+            let mut y = x_node.borrow_mut().right.take(); // Set y to be x's right child
+            if let Some(ref mut y_node) = y {
+                x_node.borrow_mut().right = y_node.borrow_mut().left.take(); // Turn y's left subtree into x's right subtree
+                y_node.borrow_mut().left = x.take(); // Make x the left child of y
+                // Update heights
+                self.update_heights_recursive(&x);
+                self.update_heights_recursive(&y);
+                return y; // Return the new root (y)
+            }
+        }
+        None
+    }
+
+    pub fn insert_pub(&mut self, val: i64) {
+        self.insert(self.root.clone(), val);
+        self.balance_tree();
+    }
+
+    pub fn insert(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
         let new_node = Rc::new(RefCell::new(Node::new(val, 1))); // New node with height 1
-        
         match root {
             None => {
-                self.root = Some(new_node);
+                self.root = Some(new_node.clone());
+                Some(new_node)
             }
-            Some(ref node) => {
-                let mut current_node = node.borrow_mut();
-                if val < current_node.val {
+            Some(node) => {
+                let node_val = node.borrow().val;
+                if val < node_val {
+                    let mut current_node = node.borrow_mut();
                     if current_node.left.is_none() {
                         current_node.left = Some(new_node.clone());
                     } else {
-                        self.insert(current_node.left.clone(), val);
+                        current_node.left = self.insert(current_node.left.take(), val);
                     }
-                } else if val > current_node.val {
+                } else if val > node.borrow().val {
+                    let mut current_node = node.borrow_mut();
                     if current_node.right.is_none() {
                         current_node.right = Some(new_node.clone());
                     } else {
-                        self.insert(current_node.right.clone(), val);
+                        current_node.right = self.insert(current_node.right.take(), val);
+                    }
+                }
+
+                {
+                    let mut node_borrow = node.borrow_mut();
+                    // Set node's height
+                    node_borrow.height = 1 + std::cmp::max(
+                        node_borrow.left.as_ref().map_or(0, |n| n.borrow().height), // Node's height or 0 if node is None
+                        node_borrow.right.as_ref().map_or(0, |n| n.borrow().height),
+                    );
+                }
+                Some(Rc::clone(&node))
+            }
+        }
+    }
+
+    fn balance_subtree(&mut self, node: Option<Rc<RefCell<Node>>>) -> Option<Rc<RefCell<Node>>> {
+        
+        if let Some(ref current) = node {
+            let balance_factor = current.borrow().get_balance_factor();
+            // Left heavy
+            if balance_factor > 1 {
+                let left_balance_factor = current.borrow().left.as_ref().map_or(0, |n| n.borrow().get_balance_factor());
+                
+                // Left-Right case
+                if left_balance_factor < 0 {
+                    let new_left = self.rotate_left(current.borrow().left.clone());
+                    current.borrow_mut().left = new_left.clone();
+                }
+
+                // Left-Left case
+                return self.rotate_right(Some(Rc::clone(current)));
+            }
+
+            // Right heavy
+            if balance_factor < -1 {
+                let right_balance_factor = current.borrow().right.as_ref().map_or(0, |n| n.borrow().get_balance_factor());
+                
+                // Right-Left case
+                if right_balance_factor > 0 {
+                    let right_child = current.borrow().right.clone();
+                    let new_right = self.rotate_right(right_child);
+                    current.borrow_mut().right = new_right.clone();
+                }
+
+                // Right-Right case
+                return self.rotate_left(Some(Rc::clone(current)));
+            }
+
+            // Recursively balance children
+            let left = self.balance_subtree(current.borrow().left.clone());
+            current.borrow_mut().left = left.clone();
+
+            let right = self.balance_subtree(current.borrow().right.clone());
+            current.borrow_mut().right = right.clone();
+
+            Some(Rc::clone(current))
+        } else {
+            None
+        }
+    }
+
+    // Public function to balance the entire AVL tree
+    fn balance_tree(&mut self) {
+        let root = self.root.clone();
+        self.root = self.balance_subtree(root);
+        self.update_heights();
+    }
+
+    pub fn update_heights(&mut self) {
+        self.update_heights_recursive(&self.root);
+    }
+
+    // Recursive helper function for updating heights
+    fn update_heights_recursive(&self, node: &Option<Rc<RefCell<Node>>>) {
+        if let Some(current) = node {
+            // Recursively update heights of left and right subtrees
+            self.update_heights_recursive(&current.borrow().left);
+            self.update_heights_recursive(&current.borrow().right);
+
+            // Calculate the new height of the current node
+            let left_height = current.borrow().left.as_ref().map_or(0, |n| n.borrow().height);
+            let right_height = current.borrow().right.as_ref().map_or(0, |n| n.borrow().height);
+            let new_height = 1 + std::cmp::max(left_height, right_height);
+
+            // Update the height of the current node
+            current.borrow_mut().height = new_height;
+        }
+    }
+
+    pub fn delete(&mut self, val: i64) {
+        let root = self.root.take();
+        self.root = self.delete_node(root, val);
+        self.balance_tree();
+    }
+
+    fn delete_node(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
+        if let Some(ref node) = root {
+            {
+                let mut current_node = node.borrow_mut();
+                if val < current_node.val {
+                    current_node.left = self.delete_node(current_node.left.take(), val);
+                } else if val > current_node.val {
+                    current_node.right = self.delete_node(current_node.right.take(), val);
+                } else {
+                    // Node to delete found
+                    if current_node.left.is_none() {
+                        // Case 1: No left child or no child at all
+                        return current_node.right.take();
+                    } else if current_node.right.is_none() {
+                        // Case 2: No right child
+                        return current_node.left.take();
+                    } else {
+                        // Case 3: Node has both children
+                        let successor = self.find_min(&current_node.right);
+                        let successor_val = successor.borrow().val;
+                        current_node.val = successor_val;
+                        current_node.right = self.delete_node(current_node.right.take(), successor_val);
                     }
                 }
 
@@ -160,101 +245,7 @@ impl AVLTree {
                     current_node.right.as_ref().map_or(0, |n| n.borrow().height),
                 );
 
-                let balance = current_node.get_balance_factor();
-
-                if balance > 1 {
-                    if let Some(left_node) = &current_node.left {
-                        let left_node_borrow = left_node.borrow();
-                        if val < left_node_borrow.val {
-                            // Left Left Case
-                            //self.rotate_right(Some(node.clone())); // Rotate and return
-                        } else {
-                            // Left Right Case
-                            self.rotate_left(Some(left_node.clone()));
-                            //self.rotate_right(Some(node.clone())); // Rotate and return
-                        }
-                    }
-                } else if balance < -1 {
-                    if let Some(right_node) = &current_node.right {
-                        let right_node_borrow = right_node.borrow();
-                        if val > right_node_borrow.val {
-                            // Right Right Case
-                            self.rotate_left(Some(node.clone())); // Rotate and return
-                        } else {
-                            // Right Left Case
-                            //self.rotate_right(Some(right_node.clone()));
-                            self.rotate_left(Some(node.clone())); // Rotate and return
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn delete(&mut self, val: i64) {
-        let root = self.root.take();
-        self.root = self.delete_node(root, val);
-    }
-
-    fn delete_node(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
-        if let Some(ref node) = root {
-            let mut current_node = node.borrow_mut();
-            if val < current_node.val {
-                current_node.left = self.delete_node(current_node.left.take(), val);
-            } else if val > current_node.val {
-                current_node.right = self.delete_node(current_node.right.take(), val);
-            } else {
-                // Node to delete found
-                if current_node.left.is_none() {
-                    // Case 1: No left child or no child at all
-                    return current_node.right.take();
-                } else if current_node.right.is_none() {
-                    // Case 2: No right child
-                    return current_node.left.take();
-                } else {
-                    // Case 3: Node has both children
-                    let successor = self.find_min(&current_node.right);
-                    let successor_val = successor.borrow().val;
-                    current_node.val = successor_val;
-                    current_node.right = self.delete_node(current_node.right.take(), successor_val);
-                }
-            }
-
-            // Set node's height
-            current_node.height = 1 + std::cmp::max(
-                current_node.left.as_ref().map_or(0, |n| n.borrow().height), // Node's height or 0 if node is None
-                current_node.right.as_ref().map_or(0, |n| n.borrow().height),
-            );
-
-            let balance = current_node.get_balance_factor();
-
-            if balance > 1 {
-                if let Some(left_node) = &mut current_node.left {
-                    if val < left_node.borrow().val {
-                        // Left Left Case
-                        return self.rotate_right(Some(node.clone())); // Rotate and return
-                    } else {
-                        // Left Right Case
-                        if let Some(rotated_node) = self.rotate_left(Some(left_node.clone())) {
-                            *left_node = rotated_node;
-                        }
-                        return self.rotate_right(Some(node.clone())); // Rotate and return
-                    }
-                }
-            } else if balance < -1 {
-                if let Some(right_node) = &mut current_node.right {
-                    if val > right_node.borrow().val {
-                        // Right Right Case
-                        return self.rotate_left(Some(node.clone())); // Rotate and return
-                    } else {
-                        // Right Left Case
-                        if let Some(rotated_node) = self.rotate_right(Some(right_node.clone())) {
-                            *right_node = rotated_node;
-                        }
-                        return self.rotate_left(Some(node.clone())); // Rotate and return
-                    }
-                }
-            }
+            };
         }
         root
     }
@@ -268,7 +259,18 @@ impl AVLTree {
     }
 
     pub fn get_num_leaves(&self) -> i64 {
-        2 // Replace with height
+        fn df(node: Option<Rc<RefCell<Node>>>) -> i64 {
+            if let Some(ref current_node) = node {
+                if current_node.borrow().left.is_none() && current_node.borrow().right.is_none() {
+                    return 1; 
+                }
+                return df(current_node.borrow().right.clone()) + df(current_node.borrow().left.clone())
+            } else {
+                return 0;
+            }
+        }
+
+        df(self.root.clone())
     }
 
     pub fn get_height(&self) -> i64 {
