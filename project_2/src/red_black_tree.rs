@@ -64,6 +64,44 @@ impl <T: Ord + Clone + std::fmt::Debug> RedBlackTree<T> {
 
     }
 
+    pub fn delete(&mut self, key: T) {
+        if let Some(node_to_delete) = self.find_node(&key) {
+            let original_color = node_to_delete.borrow().color.clone();
+            let x;
+            let y;
+
+            if node_to_delete.borrow().left.is_none() {
+                x = node_to_delete.borrow().right.clone();
+                self.transplant(Some(node_to_delete.clone()), node_to_delete.borrow().right.clone());
+            } else if node_to_delete.borrow().right.is_none() {
+                x = node_to_delete.borrow().left.clone();
+                self.transplant(Some(node_to_delete.clone()), node_to_delete.borrow().left.clone());
+            } else {
+                y = self.minimum(node_to_delete.borrow().right.clone()).unwrap();
+                let y_original_color = y.borrow().color.clone();
+                x = y.borrow().right.clone();
+
+                if y.borrow().parent.as_ref().unwrap().borrow().key != node_to_delete.borrow().key {
+                    self.transplant(Some(y.clone()), y.borrow().right.clone());
+                    y.borrow_mut().right = node_to_delete.borrow().right.clone();
+                    y.borrow().right.as_ref().unwrap().borrow_mut().parent = Some(y.clone());
+                }
+
+                self.transplant(Some(node_to_delete.clone()), Some(y.clone()));
+                y.borrow_mut().left = node_to_delete.borrow().left.clone();
+                y.borrow().left.as_ref().unwrap().borrow_mut().parent = Some(y.clone());
+                y.borrow_mut().color = node_to_delete.borrow().color.clone();
+                if y_original_color == NodeColor::Black {
+                    self.delete_fixup(&x);
+                }
+            }
+
+            if original_color == NodeColor::Black {
+                self.delete_fixup(&x);
+            }
+        }
+    }
+
     pub fn count_leaves(&self) -> usize {
         self.count_leaves_recursive(&self.root)
     }
@@ -267,99 +305,6 @@ impl <T: Ord + Clone + std::fmt::Debug> RedBlackTree<T> {
             }
         }
     }
-    
-    fn count_leaves_recursive(&self, node: &Link<T>) -> usize {
-        if let Some(ref current) = node {
-            if current.borrow().left.is_none() && current.borrow().right.is_none() {
-                1
-            } else {
-                let left_count = self.count_leaves_recursive(&current.borrow().left);
-                let right_count = self.count_leaves_recursive(&current.borrow().right);
-                left_count + right_count
-            }
-        } else {
-            0
-        }
-    }
-        
-    fn get_height(&self, node: &Link<T>) -> isize  {
-        if let Some(ref current) = node {
-            let left_height = self.get_height(&current.borrow().left);
-            let right_height = self.get_height(&current.borrow().right);
-            1 + std::cmp::max(left_height, right_height)
-        } else {
-            0
-        }
-    }
-    
-    fn build_tree_string(&self, node: &Link<T>, depth: usize) -> String {
-        if let Some(ref current) = node {
-            let indent = "    ".repeat(depth);
-            let node_key = format!("{:?}", current.borrow().key);
-            let node_color = format!("{:?}", current.borrow().color);
-            let left_string = self.build_tree_string(&current.borrow().left, depth + 1);
-            let right_string = self.build_tree_string(&current.borrow().right, depth + 1);
-            
-            let mut result = format!("{}TreeNode {{\n", indent);
-            result += &format!("{}    data: \"{}\",\n", indent, node_key);
-            result += &format!("{}    color: \"{}\",\n", indent, node_color);
-            
-            if left_string.is_empty() {
-                result += &format!("{}    left_child: None,\n", indent);
-            } else {
-                result += &format!("{}    left_child: Some(\n{}{}\n{}    ),\n", indent, left_string, indent, indent);
-            }
-            
-            if right_string.is_empty() {
-                result += &format!("{}    right_child: None,\n", indent);
-            } else {
-                result += &format!("{}    right_child: Some(\n{}{}\n{}    ),\n", indent, right_string, indent, indent);
-            }
-            
-            result += &format!("{}}}", indent);
-            result
-        } else {
-            String::new()
-        }
-    }
-    
-    pub fn delete(&mut self, key: T) {
-        if let Some(node_to_delete) = self.find_node(&key) {
-            let original_color = node_to_delete.borrow().color.clone();
-            let x;
-            let y;
-
-            if node_to_delete.borrow().left.is_none() {
-                x = node_to_delete.borrow().right.clone();
-                self.transplant(Some(node_to_delete.clone()), node_to_delete.borrow().right.clone());
-            } else if node_to_delete.borrow().right.is_none() {
-                x = node_to_delete.borrow().left.clone();
-                self.transplant(Some(node_to_delete.clone()), node_to_delete.borrow().left.clone());
-            } else {
-                y = self.minimum(node_to_delete.borrow().right.clone()).unwrap();
-                let y_original_color = y.borrow().color.clone();
-                x = y.borrow().right.clone();
-
-                if y.borrow().parent.as_ref().unwrap().borrow().key != node_to_delete.borrow().key {
-                    self.transplant(Some(y.clone()), y.borrow().right.clone());
-                    y.borrow_mut().right = node_to_delete.borrow().right.clone();
-                    y.borrow().right.as_ref().unwrap().borrow_mut().parent = Some(y.clone());
-                }
-
-                self.transplant(Some(node_to_delete.clone()), Some(y.clone()));
-                y.borrow_mut().left = node_to_delete.borrow().left.clone();
-                y.borrow().left.as_ref().unwrap().borrow_mut().parent = Some(y.clone());
-                y.borrow_mut().color = node_to_delete.borrow().color.clone();
-                if y_original_color == NodeColor::Black {
-                    self.delete_fixup(&x);
-                }
-            }
-
-            if original_color == NodeColor::Black {
-                self.delete_fixup(&x);
-            }
-        }
-    }
 
     fn find_node(&self, key: &T) -> Option<Rc<RefCell<TreeNode<T>>>> {
         let mut current = self.root.clone();
@@ -491,5 +436,75 @@ impl <T: Ord + Clone + std::fmt::Debug> RedBlackTree<T> {
         if let Some(x_node) = x {
             x_node.borrow_mut().color = NodeColor::Black;
         }
+    }
+    
+    fn count_leaves_recursive(&self, node: &Link<T>) -> usize {
+        if let Some(ref current) = node {
+            if current.borrow().left.is_none() && current.borrow().right.is_none() {
+                1
+            } else {
+                let left_count = self.count_leaves_recursive(&current.borrow().left);
+                let right_count = self.count_leaves_recursive(&current.borrow().right);
+                left_count + right_count
+            }
+        } else {
+            0
+        }
+    }
+        
+    fn get_height(&self, node: &Link<T>) -> isize  {
+        if let Some(ref current) = node {
+            let left_height = self.get_height(&current.borrow().left);
+            let right_height = self.get_height(&current.borrow().right);
+            1 + std::cmp::max(left_height, right_height)
+        } else {
+            0
+        }
+    }
+    
+    fn build_tree_string(&self, node: &Link<T>, depth: usize) -> String {
+        if let Some(ref current) = node {
+            let indent = "    ".repeat(depth);
+            let node_key = format!("{:?}", current.borrow().key);
+            let node_color = format!("{:?}", current.borrow().color);
+            let left_string = self.build_tree_string(&current.borrow().left, depth + 1);
+            let right_string = self.build_tree_string(&current.borrow().right, depth + 1);
+            
+            let mut result = format!("{}TreeNode {{\n", indent);
+            result += &format!("{}    data: \"{}\",\n", indent, node_key);
+            result += &format!("{}    color: \"{}\",\n", indent, node_color);
+            
+            if left_string.is_empty() {
+                result += &format!("{}    left_child: None,\n", indent);
+            } else {
+                result += &format!("{}    left_child: Some(\n{}{}\n{}    ),\n", indent, left_string, indent, indent);
+            }
+            
+            if right_string.is_empty() {
+                result += &format!("{}    right_child: None,\n", indent);
+            } else {
+                result += &format!("{}    right_child: Some(\n{}{}\n{}    ),\n", indent, right_string, indent, indent);
+            }
+            
+            result += &format!("{}}}", indent);
+            result
+        } else {
+            String::new()
+        }
+    }
+
+    pub fn search_node(&self, key: T) -> Option<Rc<RefCell<TreeNode<T>>>> {
+        let mut current = self.root.clone();
+        while let Some(current_node) = current {
+            let current_key = current_node.borrow().key.clone();
+            if key < current_key {
+                current = current_node.borrow().left.clone();
+            } else if key > current_key {
+                current = current_node.borrow().right.clone();
+            } else {
+                return Some(current_node.clone());
+            }
+        }
+        None
     }
 }
