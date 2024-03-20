@@ -24,6 +24,7 @@ fn main() {
 
     tree.delete(2); 
     println!("Delete 2:");
-    tree.print_tree()
+    tree.print_tree();
+    println!("{}", tree.get_num_leaves());
 
 }

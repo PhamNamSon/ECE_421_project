@@ -259,7 +259,18 @@ impl AVLTree {
     }
 
     pub fn get_num_leaves(&self) -> i64 {
-        2 // Replace with height
+        fn df(node: Option<Rc<RefCell<Node>>>) -> i64 {
+            if let Some(ref current_node) = node {
+                if current_node.borrow().left.is_none() && current_node.borrow().right.is_none() {
+                    return 1; 
+                }
+                return df(current_node.borrow().right.clone()) + df(current_node.borrow().left.clone())
+            } else {
+                return 0;
+            }
+        }
+
+        df(self.root.clone())
     }
 
     pub fn get_height(&self) -> i64 {
