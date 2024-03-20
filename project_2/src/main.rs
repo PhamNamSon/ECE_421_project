@@ -1,7 +1,7 @@
-use std::cell::RefCell;
 use std::rc::Rc;
+use std::cell::RefCell;
 mod red_black_tree;
-use red_black_tree::RedBlackTree;
+use red_black_tree::RBTree;
 mod avl_tree;
 use avl_tree::AVLTree;
 use avl_tree::Node;
@@ -19,7 +19,7 @@ fn main() {
 
         match choice {
             1 => {
-                let mut tree = RedBlackTree::new();
+                let mut tree = RBTree::new();
                 loop {
                     let mut input = String::new();
                     println!("Enter: ");
@@ -40,7 +40,7 @@ fn main() {
                                 let mut input = String::new();
                                 println!("Enter the value to insert: ");
                                 io::stdin().read_line(&mut input).expect("Failed to read input.");
-                                let value: i32 = input.trim().parse().expect("Invalid input.");
+                                let value: u32 = input.trim().parse().expect("Invalid input.");
                                 tree.insert(value);
                                 break;
                             }
@@ -48,7 +48,7 @@ fn main() {
                                 let mut input = String::new();
                                 println!("Enter the value to delete: ");
                                 io::stdin().read_line(&mut input).expect("Failed to read input.");
-                                let value: i32 = input.trim().parse().expect("Invalid input.");
+                                let value: u32 = input.trim().parse().expect("Invalid input.");
                                 tree.delete(value);
                                 break;
                             }
@@ -61,7 +61,7 @@ fn main() {
                                 break;
                             }
                             5 => {
-                                println!("In-order traversal: ");
+                                println!("Tree in-order traversal: ");
                                 tree.print_in_order();
                                 break;
                             }
@@ -70,7 +70,7 @@ fn main() {
                                 break;
                             }
                             7 => {
-                                // tree.borrow().print_tree();
+                                tree.print_tree();
                                 break;
                             }
                             8 => {
