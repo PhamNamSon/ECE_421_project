@@ -22,8 +22,8 @@ Our project is dedicated to developing Rust libraries for Red-black trees and AV
  
     
 ### Users Manual
-    #### Command Line Interface 
-    ```$cargo run <arg1> <arg2>```
+#### Command Line Interface 
+    $cargo run <arg1> <arg2>
 
 ### 2-minute Video
 * Add content here
