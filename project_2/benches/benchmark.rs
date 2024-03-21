@@ -1,22 +1,66 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 #[path = "../src/lib.rs"]
 mod lib;
-use lib::red_black_tree::RedBlackTree;
+// use lib::red_black_tree::RedBlackTree;
+use lib::red_black_tree::RBTree;
+use lib::avl_tree::AVLTree;
 
-fn red_black_insert(x: i32){
-    let mut tree: RedBlackTree<i32> = RedBlackTree::new();
+
+fn red_black_insert(x: u32) -> RBTree{
+    let mut tree: RBTree = RBTree::new();
     for i in 0..x{
         tree.insert(i);
     }
+    tree
 }
 
-fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("insert 10k", |b| b.iter(|| red_black_insert(black_box(10000))));
-    c.bench_function("insert 40k", |b| b.iter(|| red_black_insert(black_box(40000))));
-    c.bench_function("insert 70k", |b| b.iter(|| red_black_insert(black_box(70000))));
-    c.bench_function("insert 100k", |b| b.iter(|| red_black_insert(black_box(100000))));
-    c.bench_function("insert 130k", |b| b.iter(|| red_black_insert(black_box(130000))));
+fn avl_insert(x: i32) -> AVLTree{
+    let mut tree = AVLTree::new();
+    for i in 0..x{
+        tree.insert_pub(i.into()); 
+    }
+    tree
 }
 
-criterion_group!(benches, criterion_benchmark);
+fn insertion_benchmark(c: &mut Criterion) {
+    let insertion_amounts: Vec<u32> = vec![10000, 40000, 70000, 100000, 130000];
+    for tree_size in insertion_amounts.iter() {
+        let mut bench_group = c.benchmark_group(format!("{} Tree Insertions", tree_size));
+
+        bench_group.bench_function("Red Black Tree", |b| {
+            b.iter(||red_black_insert(*tree_size));
+        });
+
+        bench_group.bench_function("AVL Tree", |b|{
+            b.iter(||avl_insert(*tree_size as i32));
+        });
+    }
+}
+
+fn searches_benchmark(c: &mut Criterion) {
+    let insertion_amounts: Vec<u32> = vec![10000, 40000, 70000, 100000, 130000];
+    for tree_size in insertion_amounts.iter() {
+        let red_black_tree: RBTree = red_black_insert(*tree_size);
+        let avl_tree: AVLTree = avl_insert(*tree_size as i32);
+
+        let mut bench_group = c.benchmark_group(format!("{} Tree Searches", tree_size/10));
+        bench_group.bench_function("Red Black Tree", |b| {
+            b.iter(||{
+                for i in 0..*tree_size/10{
+                    red_black_tree.search_node(i);
+                }
+            });
+        });
+
+        bench_group.bench_function("AVL Tree", |b| {
+            b.iter(||{
+                for i in 0..*tree_size/10{
+                    avl_tree.search_tree(i.into());
+                }
+            });
+        });
+    }
+}
+
+criterion_group!(benches, insertion_benchmark, searches_benchmark);
 criterion_main!(benches);
