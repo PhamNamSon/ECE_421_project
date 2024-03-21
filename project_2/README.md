@@ -19,8 +19,8 @@ Our project is dedicated to developing Rust libraries for Red-black trees and AV
 
 ### Known Errors, Faults, Defects, Missing Functionality
 * Add content here
-    ####
-  ```$cargo run.....```
+  #### Command Line Interface
+  ```$cargo run <arg1> <arg2>```
     
 ### Users Manual
 * Add content here
