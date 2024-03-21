@@ -496,7 +496,7 @@ impl RBTree {
     fn print_from_node(node: &RedBlackTree, depth: usize) {
         if let Some(n) = node {
             let n = n.borrow();
-            let indent = "     ".repeat(depth);
+            let indent = "      ".repeat(depth);
             Self::print_from_node(&n.left, depth + 1);
             println!("{}{}({})", indent, n.key, n.color);
             Self::print_from_node(&n.right, depth + 1);
