@@ -1,11 +1,12 @@
-use std::cell::RefCell;
 use std::rc::Rc;
+use std::cell::RefCell;
 mod red_black_tree;
-use red_black_tree::RedBlackTree;
+use red_black_tree::RBTree;
 mod avl_tree;
 use avl_tree::AVLTree;
 use avl_tree::Node;
 use std::io;
+
 
 fn main() {
     loop {
@@ -19,8 +20,8 @@ fn main() {
 
         match choice {
             1 => {
-                let mut tree = RedBlackTree::new();
                 println!("RED-BLACK SELECTED");
+                let mut tree = RBTree::new();
                 loop {
                     let mut input = String::new();
                     println!("Enter: ");
@@ -41,7 +42,7 @@ fn main() {
                                 let mut input = String::new();
                                 println!("Enter the value to insert: ");
                                 io::stdin().read_line(&mut input).expect("Failed to read input.");
-                                let value: i32 = input.trim().parse().expect("Invalid input.");
+                                let value: u32 = input.trim().parse().expect("Invalid input.");
                                 tree.insert(value);
                                 break;
                             }
@@ -49,7 +50,7 @@ fn main() {
                                 let mut input = String::new();
                                 println!("Enter the value to delete: ");
                                 io::stdin().read_line(&mut input).expect("Failed to read input.");
-                                let value: i32 = input.trim().parse().expect("Invalid input.");
+                                let value: u32 = input.trim().parse().expect("Invalid input.");
                                 tree.delete(value);
                                 break;
                             }
@@ -62,7 +63,7 @@ fn main() {
                                 break;
                             }
                             5 => {
-                                println!("In-order traversal: ");
+                                println!("Tree in-order traversal: ");
                                 tree.print_in_order();
                                 break;
                             }
@@ -71,7 +72,7 @@ fn main() {
                                 break;
                             }
                             7 => {
-                                //tree.build_tree_string();
+                                tree.print_tree();
                                 break;
                             }
                             8 => {
@@ -99,7 +100,7 @@ fn main() {
                     println!("4. Return the height of the tree");
                     println!("5. Print In-order traversal of the tree");
                     println!("6. Check if the tree is empty");
-                    println!("7. Print the tree showing its color and structure");
+                    println!("7. Print the tree showing its structure");
                     println!("8. Exit");
                     io::stdin().read_line(&mut input).expect("Failed to read input.");
                     let choice: u32 = input.trim().parse().expect("Invalid input.");
