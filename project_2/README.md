@@ -12,7 +12,7 @@ Our project is dedicated to developing Rust libraries for Red-black trees and AV
 ## Design Documentation
 
 ### Major Innovations
-    * Add content here
+* Add content here
     
 ### Details of Augmented Decisions
     * Add content here
