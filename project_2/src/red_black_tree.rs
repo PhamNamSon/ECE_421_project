@@ -462,7 +462,7 @@ impl <T: Ord + Clone + std::fmt::Debug> RedBlackTree<T> {
         }
     }
     
-    fn build_tree_string(&self, node: &Link<T>, depth: usize) -> String {
+    pub fn build_tree_string(&self, node: &Link<T>, depth: usize) -> String {
         if let Some(ref current) = node {
             let indent = "    ".repeat(depth);
             let node_key = format!("{:?}", current.borrow().key);
