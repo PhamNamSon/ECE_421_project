@@ -15,13 +15,18 @@ Our project is dedicated to developing Rust libraries for Red-black trees and AV
 * Add content here
     
 ### Details of Augmented Decisions
-    * Add content here
+ * Add content here
 
 ### Known Errors, Faults, Defects, Missing Functionality
-    * Add content here
-
+* Add content here
+    ####
+  ```$cargo run.....```
+    
 ### Users Manual
-    * Add content here
+* Add content here
 
 ### 2-minute Video
-    * Add content here
+* Add content here
+
+### Testing Results
+* Add content here
