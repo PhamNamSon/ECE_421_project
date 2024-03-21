@@ -33,4 +33,4 @@ Our project is dedicated to developing Rust libraries for Red-black trees and AV
 
 
 ## test image
-![Tree Diagram](tree-diagram.png)
+![Tree Diagram](test.jpg)
