@@ -1,14 +1,28 @@
-<div id='main'>
-  <form id="gameForm">
-    <div class="w3-container" id="services" style="margin-top:75px">
-      <h5 class="w3-xxxlarge w3-text-red"><b>Welcome</b></h5>
-      <hr style="width:50px;border:5px solid red" class="w3-round">
-      <p>This application contains the following two board games, both in human Vs. human and human Vs. Computer versions.</p>
-      <ul>
-          <li>Connect 4</li>
-          <li>TOOT-OTTO</li>
-      </ul>
-      <p>Select the game of your choice from the side bar, and start playing. Enjoy!</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+            <h1>Play</h1>
+            <a href="#" onclick="loadMainContent('HowToConnect4')">How to Play Connect 4</a>
+            <a href="#" onclick="loadMainContent('Connect4Computer')">Play Connect 4 With Computer</a>
+            <a href="#" onclick="loadMainContent('Connect4Human')">Play Connect 4 With Another Human</a>
+            <a href="#" onclick="loadMainContent('HowToTootOtto')">How to Play Toot-Otto</a>
+            <a href="#" onclick="loadMainContent('TootOttoComputer')">Play Toot-Otto With Computer</a>
+            <a href="#" onclick="loadMainContent('TootOttoHuman')">Play Toot-Otto With Another Human</a>
+            <a href="#" onclick="loadMainContent('ScoreBoard')">View Game History</a>
+            <a href="#" onclick="loadMainContent('Scores')">Score Board</a>
+        </div>
+        <div id="main-content">
+
+        </div>
     </div>
-  </form>
-</div>
+    <script src="script.js"></script>
+</body>
+</html>
