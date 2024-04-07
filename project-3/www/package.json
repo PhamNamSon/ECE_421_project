@@ -34,6 +34,6 @@
     "copy-webpack-plugin": "^5.0.0"
   },
   "dependencies": {
-    "frontend": "file:../pkg"
+    "project-3": "file:../pkg"
   }
 }
