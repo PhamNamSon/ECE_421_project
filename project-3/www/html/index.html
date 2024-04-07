@@ -4,25 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Hub</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
     <div id="container">
         <div id="sidebar">
             <h1>Play</h1>
-            <a href="#" onclick="loadMainContent('HowToConnect4')">How to Play Connect 4</a>
-            <a href="#" onclick="loadMainContent('Connect4Computer')">Play Connect 4 With Computer</a>
-            <a href="#" onclick="loadMainContent('Connect4Human')">Play Connect 4 With Another Human</a>
-            <a href="#" onclick="loadMainContent('HowToTootOtto')">How to Play Toot-Otto</a>
-            <a href="#" onclick="loadMainContent('TootOttoComputer')">Play Toot-Otto With Computer</a>
-            <a href="#" onclick="loadMainContent('TootOttoHuman')">Play Toot-Otto With Another Human</a>
-            <a href="#" onclick="loadMainContent('ScoreBoard')">View Game History</a>
-            <a href="#" onclick="loadMainContent('Scores')">Score Board</a>
+            <a href="html/HowToConnect4.html">How to Play Connect 4</a>
+            <a href="html/Connect4Computer.html">Play Connect 4 With Computer</a>
+            <a href="html/Connect4Human.html">Play Connect 4 With Another Human</a>
+            <a href="html/HowToTootOtto.html">How to Play Toot-Otto</a>
+            <a href="html/TootOttoComputer.html">Play Toot-Otto With Computer</a>
+            <a href="html/TootOttoHuman.html">Play Toot-Otto With Another Human</a>
+            <a href="html/ScoreBoard.html">View Game History</a>
+            <a href="html/Scores.html">Score Board</a>
         </div>
         <div id="main-content">
-
+          <div class="w3-container" id="services" style="margin-top:75px">
+            <h5 class="w3-xxxlarge w3-text-red"><b>Welcome</b></h5>
+            <hr style="width:50px;border:5px solid red" class="w3-round">
+            <p>This application contains the following two board games, both in human Vs. human and human Vs. Computer versions.
+            </p>
+            <ul>
+            <li>Connect 4</li>
+            <li>TOOT-OTTO</li>
+          </ul>
+          <p>Select the game of your choice from the side bar, and start playing. Enjoy!</p>
+          </div>
         </div>
     </div>
-    <script src="script.js"></script>
 </body>
 </html>
