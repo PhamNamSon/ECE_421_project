@@ -9,5 +9,5 @@ extern "C" {
 
 #[wasm_bindgen]
 pub fn greet() {
-    alert("Hello, project-3!");
+    alert("Hello, frontend!");
 }
