@@ -91,12 +91,12 @@ impl AVLTree {
         None
     }
 
-    pub fn insert_pub(&mut self, val: i64) {
-        self.insert(self.root.clone(), val);
+    pub fn insert(&mut self, val: i64) {
+        self.insert_node(self.root.clone(), val);
         self.balance_tree();
     }
 
-    pub fn insert(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
+    pub fn insert_node(&mut self, root: Option<Rc<RefCell<Node>>>, val: i64) -> Option<Rc<RefCell<Node>>> {
         let new_node = Rc::new(RefCell::new(Node::new(val, 1))); // New node with height 1
         match root {
             None => {
@@ -110,14 +110,14 @@ impl AVLTree {
                     if current_node.left.is_none() {
                         current_node.left = Some(new_node.clone());
                     } else {
-                        current_node.left = self.insert(current_node.left.take(), val);
+                        current_node.left = self.insert_node(current_node.left.take(), val);
                     }
                 } else if val > node.borrow().val {
                     let mut current_node = node.borrow_mut();
                     if current_node.right.is_none() {
                         current_node.right = Some(new_node.clone());
                     } else {
-                        current_node.right = self.insert(current_node.right.take(), val);
+                        current_node.right = self.insert_node(current_node.right.take(), val);
                     }
                 }
 

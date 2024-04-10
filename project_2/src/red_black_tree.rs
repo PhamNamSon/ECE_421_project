@@ -21,7 +21,7 @@ type Tree = Rc<RefCell<TreeNode<u32>>>;
 
 type RedBlackTree = Option<Tree>;
 
-struct TreeNode<T> {
+pub struct TreeNode<T> {
     color: NodeColor,
     key: T,
     parent: RedBlackTree,
