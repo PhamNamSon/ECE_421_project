@@ -20,8 +20,34 @@
             <a href="TootOttoComputer.html">Play Toot-Otto With Computer</a>
         </div>
         <div id="main-content">
-
+            <div id='main'>
+                <div id="services">
+                    <h5 class="w3-xxxlarge w3-text-red"><b>Enter Your Name</b></h5>
+                    <hr style="width:50px;border:5px solid red" class="w3-round">
+                </div>
+                <div>
+                    <input id="playerNameInput" type="text" placeholder="Your Name"/>
+                    <div id="difficultySelection">
+                        <label><input type="radio" name="difficulty" value="easy" checked> Easy</label>
+                        <label><input type="radio" name="difficulty" value="hard"> Hard</label>
+                    </div>
+                    <div id="boardSizeSelection" style="align-items: center;">
+                        <h5>Choose Board Size:</h5>
+                        <label><input type="radio" name="boardSize" value="standard" checked> Standard (7 cols x 6 rows)</label>
+                        <label style="display: flex; align-items: center;">
+                            <input type="radio" name="boardSize" value="custom"> Custom
+                            <div id="customSizeInputs" style="display: none; margin-left: 10px;">
+                                <input id="customCols" type="number" placeholder="Cols" min="4" max="10" style="width: 60px; margin-right: 5px;">
+                                <input id="customRows" type="number" placeholder="Rows" min="4" max="10" style="width: 60px;">
+                            </div>
+                        </label>
+                    </div>
+                    <button id="startGameButton">Start Game</button>
+                </div>
+                <canvas id="gameboard" height="480" width="640"></canvas>
+            </div>
         </div>
     </div>
+    <script src="../js/Connect4Computer.js"></script>
 </body>
 </html>
