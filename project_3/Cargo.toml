@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 yew = { version = "0.20", features = ["csr"] }
 web-sys = "0.3.69"
-rand = "0.8.5"
+serde_json = "1.0"
