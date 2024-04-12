@@ -1,6 +1,6 @@
-use rand::Rng;
+use getrandom::getrandom;
 
-pub fn next_move(difficulty: bool, board: Vec<Vec<u8>>, rand: u8) -> Vec<i32> {
+pub fn next_move(difficulty: bool, board: Vec<Vec<u8>>) -> Vec<i32> {
     let winner = check_winner(&board);
 
     let mut result = Vec::new();
@@ -12,7 +12,7 @@ pub fn next_move(difficulty: bool, board: Vec<Vec<u8>>, rand: u8) -> Vec<i32> {
             let next_move = if difficulty {
                 calculate_hard_move(&board)
             } else {
-                calculate_easy_move(&board, rand)
+                calculate_easy_move(&board)
             };
             result.push(0);
             result.push(next_move.0 as i32);
@@ -82,16 +82,25 @@ pub fn calculate_easy_move(board: &Vec<Vec<u8>>) -> (usize, usize) {
         }
     }
 
-    let mut rng = rand::thread_rng();
-    let col = rng.gen_range(0..cols);
+    let mut available_columns = Vec::new();
+    for col in 0..cols {
+        if board.iter().any(|row| row[col] == 0) {
+            available_columns.push(col);
+        }
+    }
 
-    for offset in 0..cols {
-        let current_col = (col + offset) % cols;
-        if board[0][current_col] == 0 {
-            for x in (0..rows).rev() {
-                if x == 0 || board[x - 1][current_col] != 0 {
-                    return (x, current_col);
-                }
+    fn random_choice_from_list(list: &Vec<usize>) -> usize {
+        let mut buf = [0u8; 1];
+        getrandom(&mut buf).expect("Failed to generate random data");
+        let index = (buf[0] as usize) % list.len();
+        list[index]
+    }
+
+    if !available_columns.is_empty() {
+        let col = random_choice_from_list(&available_columns);
+        for x in (0..rows).rev() {
+            if board[x][col] == 0 {
+                return (x, col);
             }
         }
     }
