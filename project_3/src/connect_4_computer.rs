@@ -108,10 +108,11 @@ pub fn calculate_easy_move(board: &Vec<Vec<u8>>) -> (usize, usize) {
 }
 
 
-// Dummy function for calculating a hard move
-// Implement a more complex strategy for the hard difficulty
 pub fn calculate_hard_move(board: &Vec<Vec<u8>>) -> (usize, usize) {
-    // For simplicity, just return a placeholder value
-    // Implement your strategy for finding a hard move
+    let mut best_move = (0, 0);
+    let mut best_score = i32::MIN;
+    let alpha = i32::MIN;
+    let beta = i32::MAX;
+
     (0, 0)
 }
