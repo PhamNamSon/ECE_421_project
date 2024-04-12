@@ -18,6 +18,7 @@ struct Model {
     board_size: String,
     custom_cols: i32,
     custom_rows: i32,
+    board: Vec<Vec<Option<String>>>,
 }
 
 impl Component for Model {
@@ -32,6 +33,7 @@ impl Component for Model {
             board_size: "standard".into(),
             custom_cols: 7,
             custom_rows: 6,
+            board: vec![vec![None; 6]; 7],
         }
     }
 
@@ -134,49 +136,76 @@ impl Component for Model {
                             <h5>{"Choose Board Size:"}</h5>
                             <label>
                                 <input type="radio"
-                                       name="boardSize"
-                                       value="standard"
-                                       checked={self.board_size == "standard"}
-                                       onchange={ctx.link().callback(|_| Msg::UpdateBoardSize("standard".to_string()))} />
+                                    name="boardSize"
+                                    value="standard"
+                                    checked={self.board_size == "standard"}
+                                    onchange={ctx.link().callback(|_| Msg::UpdateBoardSize("standard".to_string()))} />
                                 {" Standard (7 cols x 6 rows)"}
                             </label>
                             <label style="display: flex; align-items: center;">
                                 <input type="radio"
-                                       name="boardSize"
-                                       value="custom"
-                                       checked={self.board_size == "custom"}
-                                       onchange={ctx.link().callback(|_| Msg::UpdateBoardSize("custom".to_string()))} />
+                                    name="boardSize"
+                                    value="custom"
+                                    checked={self.board_size == "custom"}
+                                    onchange={ctx.link().callback(|_| Msg::UpdateBoardSize("custom".to_string()))} />
                                 {" Custom"}
-                                <div id="customSizeInputs" style="display: none; margin-left: 10px;">
+                                <div id="customSizeInputs" style={format!("display: {}; margin-left: 10px;", if self.board_size == "custom" { "flex" } else { "none" })}>
                                     <input id="customCols"
-                                           type="number"
-                                           placeholder="Cols"
-                                           min="4"
-                                           max="10"
-                                           style="width: 60px; margin-right: 5px;"
-                                           value={self.custom_cols.to_string()}
-                                           oninput={ctx.link().callback(|e: InputEvent| {
-                                               let input: HtmlInputElement = e.target_unchecked_into();
-                                               Msg::UpdateCustomCols(input.value_as_number() as i32)
-                                           })} />
+                                        type="number"
+                                        placeholder="Cols"
+                                        min="4"
+                                        max="10"
+                                        style="width: 60px; margin-right: 5px;"
+                                        value={self.custom_cols.to_string()}
+                                        oninput={ctx.link().callback(|e: InputEvent| {
+                                            let input: HtmlInputElement = e.target_unchecked_into();
+                                            Msg::UpdateCustomCols(input.value_as_number() as i32)
+                                        })} />
                                     <input id="customRows"
-                                           type="number"
-                                           placeholder="Rows"
-                                           min="4"
-                                           max="10"
-                                           style="width: 60px;"
-                                           value={self.custom_rows.to_string()}
-                                           oninput={ctx.link().callback(|e: InputEvent| {
-                                               let input: HtmlInputElement = e.target_unchecked_into();
-                                               Msg::UpdateCustomRows(input.value_as_number() as i32)
-                                           })} />
+                                        type="number"
+                                        placeholder="Rows"
+                                        min="4"
+                                        max="10"
+                                        style="width: 60px;"
+                                        value={self.custom_rows.to_string()}
+                                        oninput={ctx.link().callback(|e: InputEvent| {
+                                            let input: HtmlInputElement = e.target_unchecked_into();
+                                            Msg::UpdateCustomRows(input.value_as_number() as i32)
+                                        })} />
                                 </div>
                             </label>
                         </div>
                         <button id="startGameButton" onclick={ctx.link().callback(|_| Msg::StartGame)}>{"Start Game"}</button>
                     </div>
+                    { self.view_board() }
                 </div>
             </div>
+        }
+    }
+}
+
+impl Model {
+    fn view_board(&self) -> Html {
+        html! {
+            <div id="board" style="background-color: #01befe; padding: 10px; display: flex; justify-content: center; border-radius: 10px;">
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); grid-gap: 10px;">
+                    { for self.board.iter().enumerate().map(|(col_idx, col)| self.view_column(col_idx, col)) }
+                </div>
+            </div>
+        }
+    }
+
+    fn view_column(&self, col_idx: usize, column: &Vec<Option<String>>) -> Html {
+        html! {
+            <div key={col_idx} style="display: flex; flex-direction: column-reverse; justify-content: start;">
+                { for column.iter().enumerate().map(|(row_idx, cell)| self.view_cell(col_idx, row_idx, cell)) }
+            </div>
+        }
+    }
+
+    fn view_cell(&self, _col_idx: usize, _row_idx: usize, _cell: &Option<String>) -> Html {
+        html! {
+            <div style="width: 50px; height: 50px; border-radius: 50%; background-color: white; border: 1px solid #cccccc;"></div>
         }
     }
 }
