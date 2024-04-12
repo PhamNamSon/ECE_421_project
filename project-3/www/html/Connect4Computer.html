@@ -31,6 +31,12 @@
                         <label><input type="radio" name="difficulty" value="easy" checked> Easy</label>
                         <label><input type="radio" name="difficulty" value="hard"> Hard</label>
                     </div>
+                    <div id="colorBlindModeSelection">
+                        <h5>Color Mode:</h5>
+                        <label><input type="radio" name="colorMode" value="normal" checked> Normal</label>
+                        <label><input type="radio" name="colorMode" value="colorBlind1"> Color Blind Set 1</label>
+                        <label><input type="radio" name="colorMode" value="colorBlind2"> Color Blind Set 2</label>
+                    </div>
                     <div id="boardSizeSelection" style="align-items: center;">
                         <h5>Choose Board Size:</h5>
                         <label><input type="radio" name="boardSize" value="standard" checked> Standard (7 cols x 6 rows)</label>
@@ -44,10 +50,10 @@
                     </div>
                     <button id="startGameButton">Start Game</button>
                 </div>
-                <canvas id="gameboard" height="480" width="640"></canvas>
+                <canvas id="gameboard"></canvas>
             </div>
         </div>
     </div>
-    <script src="../js/Connect4Computer.js"></script>
+    <script type="module" src="../js/Connect4Computer.js"></script>
 </body>
 </html>
