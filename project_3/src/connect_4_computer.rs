@@ -33,7 +33,7 @@ fn calculate_easy_move(board: &Vec<Vec<u8>>) -> u8 {
                 for dx in 0..=1 {
                     for dy in -1..=1 {
                         if dy == 0 && dx == 0 { continue; }
-                        let mut count_ai = 0;
+
                         let mut count_user = 0;
                         let mut empty_spot = None;
 
@@ -44,17 +44,21 @@ fn calculate_easy_move(board: &Vec<Vec<u8>>) -> u8 {
                                 break;
                             }
                             match board[nx as usize][ny as usize] {
-                                2 => count_ai += 1,
                                 1 => count_user += 1,
-                                0 => empty_spot = Some(ny as usize),
+                                0 => {
+                                    if empty_spot.is_none() {
+                                        empty_spot = Some((nx as usize, ny as usize));
+                                    }
+                                },
                                 _ => {}
                             }
                         }
 
-                        if (count_ai == priority || count_user == priority) && empty_spot.is_some() {
-                            let col = empty_spot.unwrap();
-                            if x == rows - 1 || board[x + 1][col] != 0 {
-                                return col as u8;
+                        if count_user == priority {
+                            if let Some((ex, ey)) = empty_spot {
+                                if ex == rows - 1 || board[ex + 1][ey] != 0 {
+                                    return ey as u8;
+                                }
                             }
                         }
                     }

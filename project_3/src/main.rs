@@ -302,14 +302,13 @@ impl Model {
 
     fn decide_ai_move(&self) -> usize {
         let mut ai_difficulty = false;
-        if (self.difficulty == "hard"){
+        if self.difficulty == "hard" {
             ai_difficulty = true;
             web_sys::console::log_1(&"hard now".into());                
         }
         let board = self.board_to_ai_format();
         let col = next_move(ai_difficulty, board) as usize;
         col
-        // (0..self.custom_cols as usize).find(|&col| self.board[col].iter().any(Option::is_none)).unwrap_or(0)
 
     }
 
