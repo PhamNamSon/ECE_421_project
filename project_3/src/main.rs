@@ -266,7 +266,12 @@ impl ConnectFour {
         match self.current_player {
             Player::Red => "The Ai wins....".to_string(),
             Player::Yellow => format!("{:?} wins!", name),
+            _=> "It's a draw".to_string(),
         }
+    }
+
+    fn is_board_full(&self) -> bool {
+        self.board.iter().all(|col| col.iter().all(|cell| cell.is_some()))
     }
 
     fn board_to_ai_format(&self) -> Vec<Vec<u8>> {
@@ -396,7 +401,10 @@ impl ConnectFour {
         if winner_found {
             self.game_over = true;
             console::log_1(&"Winner detected!".into());
-        }
+        } else if self.is_board_full() {
+            self.game_over = true;
+            console::log_1(&"The game is a draw!".into());
+    }
     }
     
     fn check_line(&self, start: (i32, i32), direction: (i32, i32), length: i32) -> bool {
@@ -481,23 +489,6 @@ impl ConnectFour {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 struct TootComputerController {
     name_input: String,
@@ -1016,29 +1007,6 @@ impl TootComputerController {
         self.max_state(state, depth + 1, alpha, beta)
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 enum ActiveGame {
     None,
