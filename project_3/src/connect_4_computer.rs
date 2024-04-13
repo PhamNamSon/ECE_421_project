@@ -1,32 +1,52 @@
 use getrandom::getrandom;
 
-pub fn next_move(difficulty: bool, board: Vec<Vec<u8>>) -> i32 {
+pub fn next_move(difficulty: bool, board: Vec<Vec<u8>>) -> u8 {
     let is_draw = board.iter().all(|row| row.iter().all(|&cell| cell != 0));
 
     if is_draw {
         return -1;
     } else {
         if difficulty {
-            calculate_hard_move(&board) as i32
+            calculate_hard_move(&board)
         } else {
-            calculate_easy_move(&board) as i32
+            calculate_easy_move(&board)
         }
     }
 }
 
-fn calculate_easy_move(board: &Vec<Vec<u8>>) -> usize {
+fn calculate_easy_move(board: &Vec<Vec<u8>>) -> u8 {
     let rows = board.len();
     let cols = board[0].len();
 
     for priority in [3, 2] {
         for x in 0..rows {
-            for y in 0..(cols - 3) {
-                for player in [2, 1] {
-                    let slice = &board[x][y..=y+3];
-                    if slice.iter().filter(|&&cell| cell == player).count() == priority && slice.contains(&0) {
-                        let move_pos = y + slice.iter().position(|&cell| cell == 0).unwrap();
-                        if x == rows - 1 || board[x + 1][move_pos] != 0 {
-                            return move_pos;
+            for y in 0..cols {
+                for dx in 0..=1 {
+                    for dy in -1..=1 {
+                        if dy == 0 && dx == 0 { continue; }
+                        let mut count_ai = 0;
+                        let mut count_user = 0;
+                        let mut empty_spot = None;
+
+                        for step in 0..4 {
+                            let nx = x as isize + dx as isize * step;
+                            let ny = y as isize + dy as isize * step;
+                            if nx < 0 || ny < 0 || nx >= rows as isize || ny >= cols as isize {
+                                break;
+                            }
+                            match board[nx as usize][ny as usize] {
+                                2 => count_ai += 1,
+                                1 => count_user += 1,
+                                0 => empty_spot = Some(ny as usize),
+                                _ => {}
+                            }
+                        }
+
+                        if (count_ai == priority || count_user == priority) && empty_spot.is_some() {
+                            let col = empty_spot.unwrap();
+                            if x == rows - 1 || board[x + 1][col] != 0 {
+                                return col as u8;
+                            }
                         }
                     }
                 }
@@ -116,34 +136,34 @@ fn calculate_hard_move(board: &Vec<Vec<u8>>) -> usize {
 //     }
 // }
 
-fn check_winner(board: &Vec<Vec<u8>>) -> u8 {
-    let rows = board.len();
-    let cols = board[0].len();
-    let directions = [(0,1), (1,0), (1,1), (1,-1)];
+// fn check_winner(board: &Vec<Vec<u8>>) -> u8 {
+//     let rows = board.len();
+//     let cols = board[0].len();
+//     let directions = [(0,1), (1,0), (1,1), (1,-1)];
 
-    for x in 0..rows {
-        for y in 0..cols {
-            if board[x][y] != 0 {
-                for dir in directions.iter() {
-                    let mut count = 1;
-                    let mut dx = x as i32 + dir.0;
-                    let mut dy = y as i32 + dir.1;
+//     for x in 0..rows {
+//         for y in 0..cols {
+//             if board[x][y] != 0 {
+//                 for dir in directions.iter() {
+//                     let mut count = 1;
+//                     let mut dx = x as i32 + dir.0;
+//                     let mut dy = y as i32 + dir.1;
 
-                    while dx >= 0 && dx < rows as i32 && dy >= 0 && dy < cols as i32 && board[dx as usize][dy as usize] == board[x][y] {
-                        count += 1;
-                        if count == 4 {
-                            return board[x][y];
-                        }
-                        dx += dir.0;
-                        dy += dir.1;
-                    }
-                }
-            }
-        }
-    }
+//                     while dx >= 0 && dx < rows as i32 && dy >= 0 && dy < cols as i32 && board[dx as usize][dy as usize] == board[x][y] {
+//                         count += 1;
+//                         if count == 4 {
+//                             return board[x][y];
+//                         }
+//                         dx += dir.0;
+//                         dy += dir.1;
+//                     }
+//                 }
+//             }
+//         }
+//     }
 
-    0
-}
+//     0
+// }
 
 // fn generate_moves(board: &Vec<Vec<u8>>) -> Vec<(usize, usize)> {
 //     let mut moves = Vec::new();
@@ -160,5 +180,3 @@ fn check_winner(board: &Vec<Vec<u8>>) -> u8 {
 //     }
 //     moves
 // }
-
-// fn evaluate_board
