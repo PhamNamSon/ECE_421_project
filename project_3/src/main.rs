@@ -1,7 +1,8 @@
 use yew::prelude::*;
 use web_sys::HtmlInputElement;
-use serde_json::json;
+mod connect_4_computer;
 use web_sys::console;
+use connect_4_computer::next_move;
 enum Msg {
     StartGame,
     UpdateName(String),
@@ -212,13 +213,53 @@ impl Component for Model {
 }
 
 impl Model {
-    
+    fn board_to_ai_format(&self) -> Vec<Vec<u8>> {
+        self.board.iter().map(|col| {
+            col.iter().map(|cell| match cell {
+                Some(color) if color == "Red" => 1,
+                Some(color) if color == "Yellow" => 2,
+                _ => 0,
+            }).collect()
+        }).collect()
+    }
+
     fn place_piece(&mut self, col_idx: usize) -> bool {
-                 
         if self.game_over {
             return false;
         }
 
+        // Place the human player's piece
+        if !self.place_piece_in_column(col_idx) {
+            return false;
+        }
+
+        // Check for a winner or if the board is full
+        self.check_winner();
+        if self.game_over {
+            return true;
+        }
+
+        // Trigger AI move if the game isn't over
+        self.trigger_ai_move()
+    }
+
+    fn trigger_ai_move(&mut self) -> bool {
+        let ai_col_idx = self.decide_ai_move(); // This function should implement your AI's decision-making
+        if self.place_piece_in_column(ai_col_idx) {
+            self.check_winner();
+            true
+        } else {
+            false
+        }
+    }
+
+    fn decide_ai_move(&self) -> usize {
+        let board = self.board_to_ai_format();
+        let col = next_move(false, board) as usize;
+        col
+    }
+
+    fn place_piece_in_column(&mut self, col_idx: usize) -> bool {
         for row in self.board[col_idx].iter_mut() {
             if row.is_none() {
                 *row = Some(match self.current_player {
@@ -226,8 +267,6 @@ impl Model {
                     Player::Yellow => "Yellow".to_string(),
                 });
                 self.toggle_player();
-                self.check_winner();
-
                 return true;
             }
         }
@@ -242,11 +281,91 @@ impl Model {
     }
 
     fn check_winner(&mut self) {
-        console::log_1(&"Current Board State:".into());
-        
-        // Implement game-winning logic here
-        // Update self.game_over accordingly
+        let mut winner_found = false;
+    
+        // Check horizontal lines
+        for row in 0..self.custom_rows {
+            for col in 0..=(self.custom_cols - 4) {
+                if self.check_line((col, row), (1, 0), 4) {
+                    winner_found = true;
+                    break;
+                }
+            }
+            if winner_found {
+                break;
+            }
+        }
+    
+        // Check vertical lines
+        if !winner_found {
+            for col in 0..self.custom_cols {
+                for row in 0..=(self.custom_rows - 4) {
+                    if self.check_line((col, row), (0, 1), 4) {
+                        winner_found = true;
+                        break;
+                    }
+                }
+                if winner_found {
+                    break;
+                }
+            }
+        }
+    
+        // Check diagonal lines (downward right and upward right)
+        if !winner_found {
+            for col in 0..=(self.custom_cols - 4) {
+                for row in 0..=(self.custom_rows - 4) {
+                    if self.check_line((col, row), (1, 1), 4) {
+                        winner_found = true;
+                        break;
+                    }
+                }
+                for row in 3..self.custom_rows {
+                    if self.check_line((col, row), (1, -1), 4) {
+                        winner_found = true;
+                        break;
+                    }
+                }
+                if winner_found {
+                    break;
+                }
+            }
+        }
+    
+        if winner_found {
+            self.game_over = true;
+            console::log_1(&"Winner detected!".into());
+        }
     }
+    
+    fn check_line(&self, start: (i32, i32), direction: (i32, i32), length: i32) -> bool {
+        let mut x = start.0;
+        let mut y = start.1;
+        let mut last_color = None;
+    
+        for _ in 0..length {
+            if x >= self.custom_cols || y >= self.custom_rows || y < 0 {
+                return false;
+            }
+    
+            let current_color = &self.board[x as usize][y as usize];
+            if let Some(color) = current_color {
+                if last_color == Some(color) || last_color.is_none() {
+                    last_color = Some(color);
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+    
+            x += direction.0;
+            y += direction.1;
+        }
+    
+        last_color.is_some()
+    }
+    
     
     fn view_board(&self, ctx: &Context<Self>) -> Html {
         html! {

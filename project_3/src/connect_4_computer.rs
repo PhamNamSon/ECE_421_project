@@ -4,7 +4,7 @@ pub fn next_move(difficulty: bool, board: Vec<Vec<u8>>) -> u8 {
     let is_draw = board.iter().all(|row| row.iter().all(|&cell| cell != 0));
 
     if is_draw {
-        return -1;
+        return 0;
     } else {
         if difficulty {
             calculate_hard_move(&board)
@@ -69,13 +69,13 @@ fn calculate_easy_move(board: &Vec<Vec<u8>>) -> u8 {
     }
 
     if !available_columns.is_empty() {
-        random_choice_from_list(&available_columns)
+        random_choice_from_list(&available_columns) as u8
     } else {
         0
     }
 }
 
-fn calculate_hard_move(board: &Vec<Vec<u8>>) -> usize {
+fn calculate_hard_move(board: &Vec<Vec<u8>>) -> u8 {
     0
 }
 
