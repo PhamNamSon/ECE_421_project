@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use yew::prelude::*;
 use web_sys::HtmlInputElement;
 mod connect_4_computer;
@@ -5,6 +7,8 @@ use web_sys::console;
 use connect_4_computer::next_move;
 enum Msg {
     StartGame,
+    GoToHome,
+    RestartGame,
     UpdateName(String),
     UpdateDifficulty(String),
     UpdateColorMode(String),
@@ -60,6 +64,25 @@ impl Component for Model {
                 self.game_started = true;    
                 web_sys::console::log_1(&"hiiii".into());                
                 true
+            }Msg::RestartGame =>{
+                self.board = vec![vec![None; self.custom_rows as usize]; self.custom_cols as usize];
+                self.game_started = true;
+                self.game_over = false;
+                self.current_player = Player::Red; // Or choose the player who starts the new game
+                true
+            }
+            Msg::GoToHome =>{
+                self.name = "".into();
+                self.difficulty = "easy".into();
+                self.color_mode = "normal".into();
+                self.board_size = "standard".into();
+                self.custom_cols = 7;
+                self.custom_rows = 6;
+                self.board = vec![vec![None; 6]; 7];
+                self.game_started = false;
+                self.current_player = Player::Red;
+                self.game_over = false;
+                true
             }
             Msg::PlacePiece(col_idx) => {
                 self.place_piece(col_idx)
@@ -93,7 +116,21 @@ impl Component for Model {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
         if self.game_started {
-            self.view_board(ctx)
+            self.view_board(ctx);
+            if self.game_over{
+                html! {
+                    <>
+                        { self.view_board(ctx) }
+                        <div class={"winner-announcement"} style={"text-align: center; margin-top: 20px; font-size: 24px; color: red;"}>
+                            { self.winner_message() }
+                        </div>
+                        <button onclick={ctx.link().callback(|_| Msg::RestartGame)}>{"Play Again"}</button>
+                        <button onclick={ctx.link().callback(|_| Msg::GoToHome)}>{"Home Screen"}</button>
+                    </>
+                }
+            } else {
+                self.view_board(ctx)
+            }
         } else{
             html! {
                 <div id="main-content">
@@ -213,6 +250,19 @@ impl Component for Model {
 }
 
 impl Model {
+    fn winner_message(&self) -> String {
+        let mut name = "".to_string();
+        if self.name.is_empty(){
+            name = "Human".to_string();
+        } else {
+            name = self.name.to_string();
+        }
+        match self.current_player {
+            Player::Red => "The Ai wins....".to_string(),
+            Player::Yellow => format!("{:?} wins!", name),
+        }
+    }
+
     fn board_to_ai_format(&self) -> Vec<Vec<u8>> {
         self.board.iter().map(|col| {
             col.iter().map(|cell| match cell {
@@ -244,7 +294,7 @@ impl Model {
     }
 
     fn trigger_ai_move(&mut self) -> bool {
-        let ai_col_idx = self.decide_ai_move(); // This function should implement your AI's decision-making
+        let ai_col_idx = self.decide_ai_move(); 
         if self.place_piece_in_column(ai_col_idx) {
             self.check_winner();
             true
@@ -254,9 +304,11 @@ impl Model {
     }
 
     fn decide_ai_move(&self) -> usize {
-        let board = self.board_to_ai_format();
-        let col = next_move(false, board) as usize;
-        col
+        // let board = self.board_to_ai_format();
+        // let col = next_move(false, board) as usize;
+        // col
+        (0..self.custom_cols as usize).find(|&col| self.board[col].iter().any(Option::is_none)).unwrap_or(0)
+
     }
 
     fn place_piece_in_column(&mut self, col_idx: usize) -> bool {
@@ -282,7 +334,6 @@ impl Model {
 
     fn check_winner(&mut self) {
         let mut winner_found = false;
-    
         // Check horizontal lines
         for row in 0..self.custom_rows {
             for col in 0..=(self.custom_cols - 4) {
