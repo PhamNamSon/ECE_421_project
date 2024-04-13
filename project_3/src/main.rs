@@ -59,10 +59,7 @@ impl Component for Model {
     fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::StartGame => {
-                // Here, you would start the game with the selected options.
-                // This could involve setting up the game state and navigating to the game view.
                 self.game_started = true;    
-                web_sys::console::log_1(&"hiiii".into());                
                 true
             }Msg::RestartGame =>{
                 self.board = vec![vec![None; self.custom_rows as usize]; self.custom_cols as usize];
