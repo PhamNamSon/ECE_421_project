@@ -41,6 +41,7 @@ fn main() {
                                 io::stdin().read_line(&mut input).expect("Failed to read input.");
                                 let value: u32 = input.trim().parse().expect("Invalid input.");
                                 tree.insert(value);
+                                println!();
                                 break;
                             }
                             2 => {
@@ -49,27 +50,30 @@ fn main() {
                                 io::stdin().read_line(&mut input).expect("Failed to read input.");
                                 let value: u32 = input.trim().parse().expect("Invalid input.");
                                 tree.delete(value);
+                                println!();
                                 break;
                             }
                             3 => {
-                                println!("Number of leaves: {}", tree.count_leaves());
+                                println!("Number of leaves: {}\n", tree.count_leaves());
                                 break;
                             }
                             4 => {
-                                println!("Height of the tree: {}", tree.height());
+                                println!("Height of the tree: {}\n", tree.height());
                                 break;
                             }
                             5 => {
                                 println!("Tree in-order traversal: ");
                                 tree.print_in_order();
+                                println!();
                                 break;
                             }
                             6 => {
-                                println!("Is the tree empty? {}", if tree.is_empty() { "Yes" } else { "No" });
+                                println!("Is the tree empty? {}\n", if tree.is_empty() { "Yes" } else { "No" });
                                 break;
                             }
                             7 => {
                                 tree.print_tree();
+                                println!();
                                 break;
                             }
                             8 => {
@@ -80,8 +84,7 @@ fn main() {
                                 println!("Invalid choice.");
                                 break;
                             }
-                        }
-                    
+                        }                    
                     }
                 }
             }
