@@ -9,6 +9,11 @@ use text_input::{TextInput, ButtonInput};
 use wasm_bindgen::{JsValue};
 use rand::prelude::*;
 
+
+
+
+
+
 enum Msg {
     StartGame,
     GoToHome,
@@ -123,136 +128,87 @@ impl Component for ConnectFour {
     fn view(&self, ctx: &Context<Self>) -> Html {
         if self.game_started {
             self.view_board(ctx);
-            if self.game_over{
+            if self.game_over {
                 html! {
                     <>
                         { self.view_board(ctx) }
-                        <div class={"winner-announcement"} style={"text-align: center; margin-top: 20px; font-size: 24px; color: red;"}>
+                        <div class="winner-announcement">
                             { self.winner_message() }
                         </div>
-                        <button onclick={ctx.link().callback(|_| Msg::RestartGame)}>{"Play Again"}</button>
-                        <button onclick={ctx.link().callback(|_| Msg::GoToHome)}>{"Home Screen"}</button>
+                        <button class="button" onclick={ctx.link().callback(|_| Msg::RestartGame)}>{"Play Again"}</button>
+                        <button class="button" onclick={ctx.link().callback(|_| Msg::GoToHome)}>{"Home Screen"}</button>
                     </>
                 }
             } else {
                 self.view_board(ctx)
             }
-        } else{
+        } else {
             html! {
                 <div id="main-content">
                     <div id="main">
-                        <div id="services">
-                            <h5 class={"w3-xxxlarge w3-text-red"}><b>{"Enter Your Name"}</b></h5>
+                        <div class="input-group">
+                            <h5 class="input-label">{"Enter Your Name"}</h5>
+                            <input class="input-field" id="playerNameInput" type="text" placeholder="Your Name" value={self.name.clone()} oninput={ctx.link().callback(|e: InputEvent| {
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                Msg::UpdateName(input.value())
+                            })} />
                         </div>
-                        <div>
-                            <input id="playerNameInput"
-                                   type="text"
-                                   placeholder="Your Name"
-                                   value={self.name.clone()}
-                                   oninput={ctx.link().callback(|e: InputEvent| {
-                                       let input: HtmlInputElement = e.target_unchecked_into();
-                                       Msg::UpdateName(input.value())
-                                   })} />
-                            <div id="difficultySelection">
-                                <label>
-                                    <input type="radio"
-                                           name="difficulty"
-                                           value="easy"
-                                           checked={self.difficulty == "easy"}
-                                           onchange={ctx.link().callback(|_| Msg::UpdateDifficulty("easy".to_string()))} />
-                                    {" Easy"}
-                                </label>
-                                <label>
-                                    <input type="radio"
-                                           name="difficulty"
-                                           value="hard"
-                                           checked={self.difficulty == "hard"}
-                                           onchange={ctx.link().callback(|_| Msg::UpdateDifficulty("hard".to_string()))} />
-                                    {" Hard"}
-                                </label>
-                            </div>
-                            <div id="colorBlindModeSelection">
-                                <h5>{"Color Mode:"}</h5>
-                                <label>
-                                    <input type="radio"
-                                           name="colorMode"
-                                           value="normal"
-                                           checked={self.color_mode == "normal"}
-                                           onchange={ctx.link().callback(|_| Msg::UpdateColorMode("normal".to_string()))} />
-                                    {" Normal"}
-                                </label>
-                                <label>
-                                    <input type="radio"
-                                           name="colorMode"
-                                           value="colorBlind1"
-                                           checked={self.color_mode == "colorBlind1"}
-                                           onchange={ctx.link().callback(|_| Msg::UpdateColorMode("colorBlind1".to_string()))} />
-                                    {" Color Blind Set 1"}
-                                </label>
-                                <label>
-                                    <input type="radio"
-                                           name="colorMode"
-                                           value="colorBlind2"
-                                           checked={self.color_mode == "colorBlind2"}
-                                           onchange={ctx.link().callback(|_| Msg::UpdateColorMode("colorBlind2".to_string()))} />
-                                    {" Color Blind Set 2"}
-                                </label>
-                            </div>
-                            <div id="boardSizeSelection" style="align-items: center;">
-                                <h5>{"Choose Board Size:"}</h5>
-                                <label>
-                                    <input type="radio"
-                                        name="boardSize"
-                                        value="standard"
-                                        checked={self.board_size == "standard"}
-                                        onchange={ctx.link().callback(|_| Msg::UpdateBoardSize("standard".to_string()))} />
-                                    {" Standard (7 cols x 6 rows)"}
-                                </label>
-                                <label style="display: flex; align-items: center;">
-                                    <input type="radio"
-                                        name="boardSize"
-                                        value="custom"
-                                        checked={self.board_size == "custom"}
-                                        onchange={ctx.link().callback(|_| Msg::UpdateBoardSize("custom".to_string()))} />
-                                    {" Custom"}
-                                    <div id="customSizeInputs" style={format!("display: {}; margin-left: 10px;", if self.board_size == "custom" { "flex" } else { "none" })}>
-                                        <input id="customCols"
-                                            type="number"
-                                            placeholder="Cols"
-                                            min="4"
-                                            max="10"
-                                            style="width: 60px; margin-right: 5px;"
-                                            value={self.custom_cols.to_string()}
-                                            oninput={ctx.link().callback(|e: InputEvent| {
-                                                let input: HtmlInputElement = e.target_unchecked_into();
-                                                Msg::UpdateCustomCols(input.value_as_number() as i32)
-                                            })} />
-                                        <input id="customRows"
-                                            type="number"
-                                            placeholder="Rows"
-                                            min="4"
-                                            max="10"
-                                            style="width: 60px;"
-                                            value={self.custom_rows.to_string()}
-                                            oninput={ctx.link().callback(|e: InputEvent| {
-                                                let input: HtmlInputElement = e.target_unchecked_into();
-                                                Msg::UpdateCustomRows(input.value_as_number() as i32)
-                                            })} />
-                                    </div>
-                                </label>
-                            </div>
-                            <button id="startGameButton" onclick={ctx.link().callback(|_| {
-                                web_sys::console::log_1(&"Start Game button clicked".into());
-                                Msg::StartGame
-                            })}>
-                                {"Start Game"}
-                            </button>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="difficulty" value="easy" checked={self.difficulty == "easy"} onchange={ctx.link().callback(|_| Msg::UpdateDifficulty("easy".to_string()))} />
+                                {" Easy"}
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="difficulty" value="hard" checked={self.difficulty == "hard"} onchange={ctx.link().callback(|_| Msg::UpdateDifficulty("hard".to_string()))} />
+                                {" Hard"}
+                            </label>
                         </div>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="colorMode" value="normal" checked={self.color_mode == "normal"} onchange={ctx.link().callback(|_| Msg::UpdateColorMode("normal".to_string()))} />
+                                {" Normal"}
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="colorMode" value="colorBlind1" checked={self.color_mode == "colorBlind1"} onchange={ctx.link().callback(|_| Msg::UpdateColorMode("colorBlind1".to_string()))} />
+                                {" Color Blind Set 1"}
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="colorMode" value="colorBlind2" checked={self.color_mode == "colorBlind2"} onchange={ctx.link().callback(|_| Msg::UpdateColorMode("colorBlind2".to_string()))} />
+                                {" Color Blind Set 2"}
+                            </label>
+                        </div>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="boardSize" value="standard" checked={self.board_size == "standard"} onchange={ctx.link().callback(|_| Msg::UpdateBoardSize("standard".to_string()))} />
+                                {" Standard (7 cols x 6 rows)"}
+                            </label>
+                            <label style="display: flex; align-items: center;" class="radio-label">
+                                <input type="radio" name="boardSize" value="custom" checked={self.board_size == "custom"} onchange={ctx.link().callback(|_| Msg::UpdateBoardSize("custom".to_string()))} />
+                                {" Custom"}
+                                <div class="custom-size-inputs" style={format!("display: {};", if self.board_size == "custom" { "flex" } else { "none" })}>
+                                    <input class="custom-size-input" id="customCols" type="number" placeholder="Cols" min="4" max="10" value={self.custom_cols.to_string()} oninput={ctx.link().callback(|e: InputEvent| {
+                                        let input: HtmlInputElement = e.target_unchecked_into();
+                                        Msg::UpdateCustomCols(input.value_as_number() as i32)
+                                    })} />
+                                    <input class="custom-size-input" id="customRows" type="number" placeholder="Rows" min="4" max="10" value={self.custom_rows.to_string()} oninput={ctx.link().callback(|e: InputEvent| {
+                                        let input: HtmlInputElement = e.target_unchecked_into();
+                                        Msg::UpdateCustomRows(input.value_as_number() as i32)
+                                    })} />
+                                </div>
+                            </label>
+                        </div>
+                        <button class="button" id="startGameButton" onclick={ctx.link().callback(|_| {
+                            web_sys::console::log_1(&"Start Game button clicked".into());
+                            Msg::StartGame
+                        })}>
+                            {"Start Game"}
+                        </button>
                     </div>
                 </div>
             }
         }
     }
+    
 }
 
 impl ConnectFour {
@@ -1054,26 +1010,64 @@ impl Component for Root {
     fn view(&self, ctx: &Context<Self>) -> Html {
         match self.active_game {
             ActiveGame::ConnectFour => html! {
-                <>
-                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)}>{"Back to Home"}</button>
+                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)} style="padding: 10px; background-color: #4CAF50; color: white; margin-bottom: 20px; width: 150px;">{"Back to Home"}</button>
+                    <div style="padding: 20px; border: 2px solid #ddd; border-radius: 5px; text-align: center;">
+                        <h2>{"Connect Four"}</h2>
+                        <p>{"A classic two-player connection game where players first choose a color and then take turns dropping colored discs into a seven-column, six-row vertically suspended grid. The pieces fall straight down, occupying the lowest available space within the column. The objective of the game is to be the first to form a horizontal, vertical, or diagonal line of four of one's own discs."}</p>
+                    </div>
                     <ConnectFour />
-                </>
+                </div>
             },
             ActiveGame::TootComputerController => html! {
-                <>
-                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)}>{"Back to Home"}</button>
-                    // Render your other game component here
+                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)} style="padding: 10px; background-color: #4CAF50; color: white; margin-bottom: 20px; width: 150px;">{"Back to Home"}</button>
+                    <div style="padding: 20px; border: 2px solid #ddd; border-radius: 5px; text-align: center;">
+                        <h2>{"TOOT and OTTO"}</h2>
+                        <p>{"TOOT and OTTO is a two-player strategic game where players choose to be either TOOT or OTTO. Each player aims to create the words TOOT or OTTO in a straight line from their letters on a grid, either horizontally, vertically, or diagonally. Players must strategically place their letters while blocking their opponent."}</p>
+                    </div>
                     <TootComputerController />
-                </>
+                </div>
             },
             ActiveGame::None => html! {
                 <div>
                     <button onclick={ctx.link().callback(|_| Msgg::SelectConnectFour)}>{"Play Connect Four"}</button>
+                    <div id="main-connect-four">
+                        <h5 class="w3-xxxlarge w3-text-red"><b>{"How to Play Connect 4"}</b></h5>
+                        <p>{"Connect Four is a two-player connection game in which the players take turns dropping colored discs from the top into a seven-column, six-row vertically"}</p>
+                        <p>{"suspended grid. The objective of the game is to be the first to form a horizontal, vertical, or diagonal line of four of one's own discs."}</p>
+                        <br/>
+                        <div><h5>{"To play Connect 4 follow the following steps:"}</h5></div>
+                        <ul>
+                            <li>{"A new game describes discs of which color belongs to which player"}</li>
+                            <li>{"Click on the desired column on the game board to place your disc"}</li>
+                            <li>{"Try to connect 4 of your colored discs either horizontally, vertically or diagonally"}</li>
+                        </ul>
+                        <br/>{" For More information on Connect 4 click "}<a href="https://en.wikipedia.org/wiki/Connect_Four">{"here"}</a>
+                    </div>
+                    <br/>
                     <button onclick={ctx.link().callback(|_| Msgg::TootComputerController)}>{"TOOT and OTTO"}</button>
+                    <div id="main-toot-otto">
+                        <h5 class="w3-xxxlarge w3-text-red"><b>{"How to Play TOOT-OTTO"}</b></h5>
+                        <p>{"TOOT-OTTO is a fun strategy game for older players who like tic-tac-toe and checkers. One player is TOOT and the other player is OTTO. Both players"}</p>
+                        <p>{"can place both T's and O's, based on their choice. The first player who spells his or her winning combination - horizontally, vertically or diagonally - wins!"}</p>
+                        <br/>
+                        <div><h5>{"To play TOOT-OTTO follow the following steps:"}</h5></div>
+                        <ul>
+                            <li>{"A new game describes which player is TOOT and which is OTTO"}</li>
+                            <li>{"Select the disc type T or O that you want to place"}</li>
+                            <li>{"Click on the desired column on the game board to place your disc"}</li>
+                            <li>{"Try to spell TOOT or OTTO based on your winning combination, either horizontally, vertically or diagonally"}</li>
+                        </ul>
+                        <br/> {"For More information on TOOT-OTTO click "}<a href="https://boardgamegeek.com/boardgame/19530/toot-and-otto">{"here"}</a>
+                    </div>
                 </div>
             },
         }
     }
+    
+    
+    
 }
 
 
