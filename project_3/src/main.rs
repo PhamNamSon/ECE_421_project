@@ -648,7 +648,6 @@ impl TootComputerController {
                             {"(Min 4)   "}
                         </div>
                     </h4>
-                    <canvas id="gameboard" height="480" width="640"></canvas>
                 </div>
             </div>
         }
@@ -1099,9 +1098,9 @@ impl Component for Root {
     fn view(&self, ctx: &Context<Self>) -> Html {
         match self.active_game {
             ActiveGame::ConnectFour => html! {
-                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+                <div style="display: flex; align-items: center; height: 100vh; flex-direction: column;">
                     <div style="padding: 20px; border: 2px solid #ddd; border-radius: 5px; text-align: center; background-color: #f9f9f9;">
-                        <h2 style="color: #333;">{"Connect Four"}</h2>
+                        <h1 style="color: #333;">{"Connect Four"}</h1>
                         <p>{"A classic two-player connection game where players first choose a color and then take turns dropping colored discs into a seven-column, six-row vertically suspended grid. The pieces fall straight down, occupying the lowest available space within the column. The objective of the game is to be the first to form a horizontal, vertical, or diagonal line of four of one's own discs."}</p>
                     </div>
                     <ConnectFour />
@@ -1109,9 +1108,9 @@ impl Component for Root {
                 </div>
             },
             ActiveGame::TootComputerController => html! {
-                <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
+                <div style="display: flex; align-items: center; height: 100vh; flex-direction: column;">
                     <div style="padding: 20px; border: 2px solid #ddd; border-radius: 5px; text-align: center; background-color: #f9f9f9;">
-                        <h2 style="color: #333;">{"TOOT and OTTO"}</h2>
+                        <h1 style="color: #333;">{"TOOT and OTTO"}</h1>
                         <p>{"TOOT and OTTO is a two-player strategic game where players choose to be either TOOT or OTTO. Each player aims to create the words TOOT or OTTO in a straight line from their letters on a grid, either horizontally, vertically, or diagonally. Players must strategically place their letters while blocking their opponent."}</p>
                     </div>
                     <TootComputerController />
