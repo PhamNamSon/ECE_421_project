@@ -197,6 +197,7 @@ impl Component for ConnectFour {
                                 </div>
                             </label>
                         </div>
+                        <br/><br/>
                         <button class="button" id="startGameButton" onclick={ctx.link().callback(|_| {
                             web_sys::console::log_1(&"Start Game button clicked".into());
                             Msg::StartGame
@@ -1104,22 +1105,24 @@ impl Component for Root {
         match self.active_game {
             ActiveGame::ConnectFour => html! {
                 <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
-                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)} style="padding: 10px; background-color: #4CAF50; color: white; margin-bottom: 20px; width: 150px;">{"Back to Home"}</button>
                     <div style="padding: 20px; border: 2px solid #ddd; border-radius: 5px; text-align: center;">
                         <h2>{"Connect Four"}</h2>
-                        <p>{"A classic two-player connection game where players first choose a color and then take turns dropping colored discs into a seven-column, six-row vertically suspended grid. The pieces fall straight down, occupying the lowest available space within the column. The objective of the game is to be the first to form a horizontal, vertical, or diagonal line of four of one's own discs."}</p>
+                        <p>{"A classic two-player connection game where players first choose a color and then take turns dropping colored discs into a seven-column, six-row vertically suspended grid. The pieces fall"}</p>
+                        <p>{"straight down, occupying the lowest available space within the column. The objective of the game is to be the first to form a horizontal, vertical, or diagonal line of four of one's own discs."}</p>
                     </div>
                     <ConnectFour />
+                    <br/><br/><br/><br/><br/><br/><br/><br/><br/>
+                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)} style="padding: 10px; background-color: #4CAF50; color: white; margin-bottom: 20px; width: 150px;">{"Back to Home"}</button>
                 </div>
             },
             ActiveGame::TootComputerController => html! {
                 <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
-                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)} style="padding: 10px; background-color: #4CAF50; color: white; margin-bottom: 20px; width: 150px;">{"Back to Home"}</button>
                     <div style="padding: 20px; border: 2px solid #ddd; border-radius: 5px; text-align: center;">
                         <h2>{"TOOT and OTTO"}</h2>
                         <p>{"TOOT and OTTO is a two-player strategic game where players choose to be either TOOT or OTTO. Each player aims to create the words TOOT or OTTO in a straight line from their letters on a grid, either horizontally, vertically, or diagonally. Players must strategically place their letters while blocking their opponent."}</p>
                     </div>
                     <TootComputerController />
+                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)} style="padding: 10px; background-color: #4CAF50; color: white; margin-bottom: 20px; width: 150px;">{"Back to Home"}</button>
                 </div>
             },
             ActiveGame::None => html! {
