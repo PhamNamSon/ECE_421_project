@@ -499,6 +499,8 @@ impl ConnectFour {
 
 
 
+
+
 struct TootComputerController {
     name_input: String,
     game_started: bool,
@@ -511,6 +513,7 @@ struct TootComputerController {
     turn: u32, 
     winner_name: Option<String>,
     ai_move_value: i32,
+    difficulty: String
 }
 
 impl Default for TootComputerController {
@@ -519,27 +522,30 @@ impl Default for TootComputerController {
             name_input: String::new(),
             player_name: String::new(),   
             game_started: false,  
-            disc_type: '_',
+            disc_type: 'T',
             matrix: [[' '; 6]; 4],
             dummy_matrix: [[0; 6]; 4],
             non_full_col: vec![0,1,2,3,4,5],
             won: false, 
             turn: 0, 
             winner_name: None,
-            ai_move_value: 1
+            ai_move_value: 1,
+            difficulty: String::from("Easy")
         }
     }
 }
 
-enum OttOMsg {
+enum OttoMsg {
     UpdatePlayerName(String),
     GameStart,
     PassValue(String),
     UpdateDiscType(char),
+    ResetGame, 
+    SetDifficulty(String)
 }
 
 impl Component for TootComputerController {
-    type Message = OttOMsg;
+    type Message = OttoMsg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
@@ -548,22 +554,22 @@ impl Component for TootComputerController {
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            OttOMsg::UpdatePlayerName(name) => {
+            OttoMsg::UpdatePlayerName(name) => {
                 self.name_input = name;
 
                 true // Update the component state
             }
-            OttOMsg::GameStart => {
+            OttoMsg::GameStart => {
                 self.player_name = self.name_input.clone();
                 self.game_started = true;
                 true // Update the component state
             }
-            OttOMsg::PassValue(id) => {
+            OttoMsg::PassValue(id) => {
                 //self.selected = id;
                 let id_int = id.parse::<usize>().unwrap();
                 let mut full_col_pressed = true;
                 for i in (0..=3).rev() {
-                    if self.matrix[i][id_int] == ' ' && self.disc_type != '_' {
+                    if self.matrix[i][id_int] == ' ' {
                         self.matrix[i][id_int] = self.disc_type;
                         self.dummy_matrix[i][id_int] = self.disc_type as i32;
                         full_col_pressed = false;
@@ -579,7 +585,14 @@ impl Component for TootComputerController {
 
                 self.ai_move_value *= -1; 
 
-                self.ai_move_hard(&mut full_col_pressed);
+                if self.difficulty == "Easy" {
+                    self.ai_move_easy(&mut full_col_pressed);
+
+                } else if self.difficulty == "Hard" {
+                    self.ai_move_hard(&mut full_col_pressed);
+                }
+
+                
 
                 if self.win_check() {
                     web_sys::console::log_1(&JsValue::from_str("won"));
@@ -588,9 +601,17 @@ impl Component for TootComputerController {
 
                 true
             }
-            OttOMsg::UpdateDiscType(dtype) => {
+            OttoMsg::UpdateDiscType(dtype) => {
                 self.disc_type = dtype;
+                false
+            }
+            OttoMsg::ResetGame => {
+                *self = Self::default();
                 true
+            }
+            OttoMsg::SetDifficulty(difficulty) => {
+                self.difficulty = difficulty;
+                false
             }
             
         }
@@ -614,27 +635,48 @@ impl Component for TootComputerController {
 
 impl TootComputerController {
     fn menu(&self, ctx: &Context<Self>) -> Html { 
-        let on_change: Callback<_> = ctx.link().callback(OttOMsg::UpdatePlayerName);
-        let onclick: Callback<_> = ctx.link().callback(|_| OttOMsg::GameStart);
+        let on_change: Callback<_> = ctx.link().callback(OttoMsg::UpdatePlayerName);
+        let onclick: Callback<_> = ctx.link().callback(|_| OttoMsg::GameStart);
+
+        let on_change_diff: Callback<_> = ctx.link().callback(OttoMsg::SetDifficulty);
+        let on_change_diff_clone: Callback<_> = on_change_diff.clone();
+        let on_change_diff_easy = Callback::from(move |_| {
+            on_change_diff.emit(String::from("Easy"));
+        });
+        let on_change_diff_hard = Callback::from(move |_| {
+            on_change_diff_clone.emit(String::from("Hard"));
+        });
+
         html! {
-            <div id="main">
-                <div class="w3-container" id="services" style="margin-top:75px">
-                    <h5 class="w3-xxxlarge w3-text-red">{"Enter Your Name"}</h5>
-                    <hr style="width:50px;border:5px solid red" class="w3-round" />
+            <div id="main" style="text-align: center;">
+                <div class="w3-container" id="services" style="margin-top: 75px;">
+                    <h2 style="color: #FF5733; font-family: Arial, sans-serif;">{"Enter Your Name"}</h2>
+                    <hr style="width: 50px; border: 5px solid #FF5733; border-radius: 10px;" />
                 </div>
-                <div class="col-md-offset-4 col-md-8">
+                <div class="col-md-offset-4 col-md-8" style="margin-top: 30px;">
                     <div class="col-md-offset-3 col-md-8">
-                        <TextInput {on_change} value={self.name_input.clone()} />
-                        <input {onclick} id="startbutton" class="button" type="submit" value="Start Game" />
+                        <TextInput {on_change} value={self.name_input.clone()}/>
+                        <div style="margin-top: 10px;"></div>
+                        <input {onclick} id="startbutton" class="button" type="submit" value="Start Game" style="padding: 10px 20px; background-color: #FF5733; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: Arial, sans-serif; font-size: 16px;" />
                     </div>
+                    <h3 style="margin-top: 20px; color: #FF5733; font-family: Arial, sans-serif;">{"Select a Difficulty:"}
+                        <div style="display: inline-block; margin-right: 20px;">
+                            <input type="radio" name="difficulty" value="Easy" onclick={on_change_diff_easy} checked={self.difficulty == "Easy"} id="easy"/>
+                            <label for="easy" style="cursor: pointer; font-family: Arial, sans-serif; font-size: 16px; color: #FF5733; padding: 8px 20px; border: 2px solid #FF5733; border-radius: 5px;">{"Easy"}</label>
+                        </div>
+                        <div style="display: inline-block;">
+                            <input type="radio" name="difficulty" value="Hard" onclick={on_change_diff_hard} checked={self.difficulty == "Hard"} id="hard"/>
+                            <label for="hard" style="cursor: pointer; font-family: Arial, sans-serif; font-size: 16px; color: #FF5733; padding: 8px 20px; border: 2px solid #FF5733; border-radius: 5px;">{"Hard"}</label>
+                        </div>
+                    </h3>
                     <canvas id="gameboard" height="480" width="640"></canvas>
                 </div>
             </div>
         }
     }
     fn render_game(&self, ctx: &Context<Self>) -> Html {
-        let on_change: Callback<_> = ctx.link().callback(OttOMsg::PassValue);
-        let on_change_disc: Callback<_> = ctx.link().callback(OttOMsg::UpdateDiscType);
+        let on_change: Callback<_> = ctx.link().callback(OttoMsg::PassValue);
+        let on_change_disc: Callback<_> = ctx.link().callback(OttoMsg::UpdateDiscType);
         let on_change_disc_clone = on_change_disc.clone();
 
         let on_change_disc_t = Callback::from(move |_| {
@@ -646,17 +688,21 @@ impl TootComputerController {
         });
         
         html! {
-            <div class="post">
+            <div class="post" style="font-family: 'Arial', sans-serif; margin-top: 20px; text-align: center;">
                 <br />
-                <h4>{"New Game: "} {self.player_name.clone()} {" Vs Player2Name"}</h4>
-                <small>{"(Winning Combination: "}{self.player_name.clone()}{" - TOOT and Player2Name - OTTO)"}</small>
+                <h4 style="font-weight: bold; color: #FF5733;">{"New Game: "} {self.player_name.clone()} {" Vs Computer"}</h4>
+                <small style="font-size: 12px; color: #777;">{"(Winning Combination: "}{self.player_name.clone()}{" - TOOT and Computer - OTTO)"}</small>
                 <br />
                 <form>
-                    <h4>{"Select a Disc Type:"}
-                        <input type="radio" name="choice" value="T" onclick={on_change_disc_t}/>
-                        <label>{"T"}</label>
-                        <input type="radio" name="choice" value="O" onclick={on_change_disc_o}/>
-                        <label>{"O"}</label>
+                    <h4 style="font-weight: bold; margin-top: 20px; color: #FF5733;">{"Select a Disc Type:"}
+                        <div style="display: inline-block; margin-right: 20px;">
+                            <input type="radio" name="choice" value="T" onclick={on_change_disc_t} checked={self.disc_type == 'T'} id="disc_t"/>
+                            <label for="disc_t" style="cursor: pointer; font-size: 16px; color: #FF5733; padding: 8px 20px; border: 2px solid #FF5733; border-radius: 5px; background-color: white;">{"T"}</label>
+                        </div>
+                        <div style="display: inline-block;">
+                            <input type="radio" name="choice" value="O" onclick={on_change_disc_o} checked={self.disc_type == 'O'} id="disc_o"/>
+                            <label for="disc_o" style="cursor: pointer; font-size: 16px; color: #FF5733; padding: 8px 20px; border: 2px solid #FF5733; border-radius: 5px; background-color: white;">{"O"}</label>
+                        </div>
                     </h4>
                     <style>
                         {"
@@ -665,14 +711,20 @@ impl TootComputerController {
                                 height: 40px;
                                 border-radius: 50%;
                                 background-color: #ccc;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                font-size: 24px;
+                                color: #333;
+                                border: 2px solid #fff;
                             "}
                     </style>
-                    <table>
+                    <table style="margin-top: 20px; margin-left: auto; margin-right: auto;">
                         <tbody>
                             <tr>
                                 { for (0..6).map(|i| {
                                     html! {
-                                        <th><ButtonInput id={i.to_string()} value={i.to_string()} on_click={on_change.clone()}/></th>
+                                        <th style="padding: 5px;"><ButtonInput id={i.to_string()} value={i.to_string()} on_click={on_change.clone()}/></th>
                                     }
                                 })}
                             </tr>
@@ -681,7 +733,7 @@ impl TootComputerController {
                                     <tr>
                                         { for (0..6).map(|col| {
                                             html! {
-                                                <td><div class="circle">{self.matrix[row][col]}</div></td>
+                                                <td style="padding: 5px;"><div class="circle">{self.matrix[row][col]}</div></td>
                                             }
                                         })}
                                     </tr>
@@ -783,7 +835,7 @@ impl TootComputerController {
             <div style="background-color: #f0f0f0; padding: 20px; border: 2px solid #ccc; border-radius: 8px;">
                 {win_statement}
                 <div style="text-align: center;">
-                    <button style="padding: 10px 20px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+                    <button onclick={ctx.link().callback(|_| OttoMsg::ResetGame)} style="padding: 10px 20px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
                         {"Restart"}
                     </button>
                 </div>
@@ -1016,6 +1068,7 @@ impl TootComputerController {
         self.max_state(state, depth + 1, alpha, beta)
     }
 }
+
 
 
 
