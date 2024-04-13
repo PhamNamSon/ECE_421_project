@@ -195,7 +195,7 @@ impl Component for ConnectFour {
                         <button class="button" id="startGameButton" onclick={ctx.link().callback(|_| {
                             web_sys::console::log_1(&"Start Game button clicked".into());
                             Msg::StartGame
-                        })} style="padding: 10px 20px; background-color: darkgreen; color: white; font-size: 16px;">
+                        })} style="padding: 10px 20px; background-color: #4CAF50; color: white; font-size: 16px;">
                             {"Start Game"}
                         </button>
                     </div>
@@ -1114,7 +1114,7 @@ impl Component for Root {
                         <p>{"TOOT and OTTO is a two-player strategic game where players choose to be either TOOT or OTTO. Each player aims to create the words TOOT or OTTO in a straight line from their letters on a grid, either horizontally, vertically, or diagonally. Players must strategically place their letters while blocking their opponent."}</p>
                     </div>
                     <TootComputerController />
-                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)} style="padding: 10px; background-color: #4CAF50; color: white; margin-bottom: 20px; width: 150px; border: none; border-radius: 5px; cursor: pointer;">{"Back to Home"}</button>
+                    <button onclick={ctx.link().callback(|_| Msgg::GoToHome)} style="padding: 10px; background-color: #FF5733; color: white; margin-bottom: 20px; width: 150px; border: none; border-radius: 5px; cursor: pointer;">{"Back to Home"}</button>
                 </div>
             },
             ActiveGame::None => html! {
