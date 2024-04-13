@@ -451,13 +451,16 @@ struct TootComputerController {
     game_started: bool,
     player_name: String, 
     disc_type: char,
-    matrix: [[char; 6]; 4],
-    dummy_matrix: [[i32; 6]; 4],
+    matrix: Vec<Vec<char>>,
+    dummy_matrix: Vec<Vec<i32>>,
     non_full_col: Vec<usize>,
     won: bool, 
     turn: u32, 
     winner_name: Option<String>,
     ai_move_value: i32,
+    difficulty: String,
+    Columns: usize, 
+    Rows: usize
 }
 
 impl Default for TootComputerController {
@@ -466,14 +469,17 @@ impl Default for TootComputerController {
             name_input: String::new(),
             player_name: String::new(),   
             game_started: false,  
-            disc_type: '_',
-            matrix: [[' '; 6]; 4],
-            dummy_matrix: [[0; 6]; 4],
+            disc_type: 'T',
+            matrix: Vec::new(),
+            dummy_matrix: Vec::new(),
             non_full_col: vec![0,1,2,3,4,5],
             won: false, 
             turn: 0, 
             winner_name: None,
-            ai_move_value: 1
+            ai_move_value: 1,
+            difficulty: String::from("Easy"),
+            Columns: 6, 
+            Rows: 4
         }
     }
 }
@@ -483,6 +489,11 @@ enum OttOMsg {
     GameStart,
     PassValue(String),
     UpdateDiscType(char),
+    ResetGame, 
+    SetDifficulty(String),
+    SetColumns(String), 
+    SetRows(String)
+    
 }
 
 impl Component for TootComputerController {
@@ -503,14 +514,25 @@ impl Component for TootComputerController {
             OttOMsg::GameStart => {
                 self.player_name = self.name_input.clone();
                 self.game_started = true;
+                // Populate the matrix with empty vectors
+                for _ in 0..self.Rows {
+                    let row: Vec<char> = vec![' '; self.Columns as usize];
+                    let dummy_row: Vec<i32> = vec![0; self.Columns as usize];
+                    (self.matrix).push(row);
+                    (self.dummy_matrix).push(dummy_row);
+                }
+
+                if !(self.Rows >= 4 && self.Columns >=4) {
+                    return false;
+                }
                 true // Update the component state
             }
             OttOMsg::PassValue(id) => {
                 //self.selected = id;
                 let id_int = id.parse::<usize>().unwrap();
                 let mut full_col_pressed = true;
-                for i in (0..=3).rev() {
-                    if self.matrix[i][id_int] == ' ' && self.disc_type != '_' {
+                for i in (0..self.Rows).rev() {
+                    if self.matrix[i][id_int] == ' ' {
                         self.matrix[i][id_int] = self.disc_type;
                         self.dummy_matrix[i][id_int] = self.disc_type as i32;
                         full_col_pressed = false;
@@ -526,7 +548,14 @@ impl Component for TootComputerController {
 
                 self.ai_move_value *= -1; 
 
-                self.ai_move_hard(&mut full_col_pressed);
+                if self.difficulty == "Easy" {
+                    self.ai_move_easy(&mut full_col_pressed);
+
+                } else if self.difficulty == "Hard" {
+                    self.ai_move_hard(&mut full_col_pressed);
+                }
+
+                
 
                 if self.win_check() {
                     web_sys::console::log_1(&JsValue::from_str("won"));
@@ -537,7 +566,24 @@ impl Component for TootComputerController {
             }
             OttOMsg::UpdateDiscType(dtype) => {
                 self.disc_type = dtype;
+                false
+            }
+            OttOMsg::ResetGame => {
+                *self = Self::default();
                 true
+            }
+            OttOMsg::SetDifficulty(difficulty) => {
+                self.difficulty = difficulty;
+                false
+            }
+            OttOMsg::SetColumns(col) => {
+                self.Columns = col.parse().expect("Failed to parse string to integer");;
+                false
+            }
+
+            OttOMsg::SetRows(row) => {
+                self.Rows = row.parse().expect("Failed to parse string to integer");;
+                false
             }
             
         }
@@ -563,17 +609,49 @@ impl TootComputerController {
     fn menu(&self, ctx: &Context<Self>) -> Html { 
         let on_change: Callback<_> = ctx.link().callback(OttOMsg::UpdatePlayerName);
         let onclick: Callback<_> = ctx.link().callback(|_| OttOMsg::GameStart);
+
+        let on_change_diff: Callback<_> = ctx.link().callback(OttOMsg::SetDifficulty);
+        let on_change_diff_clone: Callback<_> = on_change_diff.clone();
+        let on_change_diff_easy = Callback::from(move |_| {
+            on_change_diff.emit(String::from("Easy"));
+        });
+        let on_change_diff_hard = Callback::from(move |_| {
+            on_change_diff_clone.emit(String::from("Hard"));
+        });
+
+        let on_change_col = ctx.link().callback(OttOMsg::SetColumns);
+        let on_change_row = ctx.link().callback(OttOMsg::SetRows);
+
         html! {
-            <div id="main">
-                <div class="w3-container" id="services" style="margin-top:75px">
-                    <h5 class="w3-xxxlarge w3-text-red">{"Enter Your Name"}</h5>
-                    <hr style="width:50px;border:5px solid red" class="w3-round" />
+            <div id="main" style="text-align: center;">
+                <div class="w3-container" id="services" style="margin-top: 75px;">
+                    <h2 style="color: #FF5733; font-family: Arial, sans-serif;">{"Enter Your Name"}</h2>
+                    <hr style="width: 50px; border: 5px solid #FF5733; border-radius: 10px;" />
                 </div>
-                <div class="col-md-offset-4 col-md-8">
+                <div class="col-md-offset-4 col-md-8" style="margin-top: 30px;">
                     <div class="col-md-offset-3 col-md-8">
-                        <TextInput {on_change} value={self.name_input.clone()} />
-                        <input {onclick} id="startbutton" class="button" type="submit" value="Start Game" />
+                        <TextInput {on_change} value={self.name_input.clone()}/>
+                        <div style="margin-top: 10px;"></div>
+                        <input {onclick} id="startbutton" class="button" type="submit" value="Start Game" style="padding: 10px 20px; background-color: #FF5733; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: Arial, sans-serif; font-size: 16px;" />
                     </div>
+                    <h3 style="margin-top: 20px; color: #FF5733; font-family: Arial, sans-serif;">{"Select a Difficulty:"}
+                        <div style="display: inline-block; margin-right: 20px;">
+                            <input type="radio" name="difficulty" value="Easy" onclick={on_change_diff_easy} checked={self.difficulty == "Easy"} id="easy"/>
+                            <label for="easy" style="cursor: pointer; font-family: Arial, sans-serif; font-size: 16px; color: #FF5733; padding: 8px 20px; border: 2px solid #FF5733; border-radius: 5px;">{"Easy"}</label>
+                        </div>
+                        <div style="display: inline-block;">
+                            <input type="radio" name="difficulty" value="Hard" onclick={on_change_diff_hard} checked={self.difficulty == "Hard"} id="hard"/>
+                            <label for="hard" style="cursor: pointer; font-family: Arial, sans-serif; font-size: 16px; color: #FF5733; padding: 8px 20px; border: 2px solid #FF5733; border-radius: 5px;">{"Hard"}</label>
+                        </div>
+                    </h3>
+                    <h4 style="margin-top: 20px; color: #FF5733; font-family: Arial, sans-serif;">{"Select a Row and Column:"}
+                        <div style="display: inline-block; margin-right: 20px;">
+                            <TextInput on_change = {on_change_row} value={(self.Rows.clone()).to_string()}/>
+                            {"(Min 4)   "}
+                            <TextInput on_change = {on_change_col} value={(self.Columns.clone()).to_string()}/>
+                            {"(Min 4)   "}
+                        </div>
+                    </h4>
                     <canvas id="gameboard" height="480" width="640"></canvas>
                 </div>
             </div>
@@ -593,17 +671,21 @@ impl TootComputerController {
         });
         
         html! {
-            <div class="post">
+            <div class="post" style="font-family: 'Arial', sans-serif; margin-top: 20px; text-align: center;">
                 <br />
-                <h4>{"New Game: "} {self.player_name.clone()} {" Vs Player2Name"}</h4>
-                <small>{"(Winning Combination: "}{self.player_name.clone()}{" - TOOT and Player2Name - OTTO)"}</small>
+                <h4 style="font-weight: bold; color: #FF5733;">{"New Game: "} {self.player_name.clone()} {" Vs Computer"}</h4>
+                <small style="font-size: 12px; color: #777;">{"(Winning Combination: "}{self.player_name.clone()}{" - TOOT and Computer - OTTO)"}</small>
                 <br />
                 <form>
-                    <h4>{"Select a Disc Type:"}
-                        <input type="radio" name="choice" value="T" onclick={on_change_disc_t}/>
-                        <label>{"T"}</label>
-                        <input type="radio" name="choice" value="O" onclick={on_change_disc_o}/>
-                        <label>{"O"}</label>
+                    <h4 style="font-weight: bold; margin-top: 20px; color: #FF5733;">{"Select a Disc Type:"}
+                        <div style="display: inline-block; margin-right: 20px;">
+                            <input type="radio" name="choice" value="T" onclick={on_change_disc_t} checked={self.disc_type == 'T'} id="disc_t"/>
+                            <label for="disc_t" style="cursor: pointer; font-size: 16px; color: #FF5733; padding: 8px 20px; border: 2px solid #FF5733; border-radius: 5px; background-color: white;">{"T"}</label>
+                        </div>
+                        <div style="display: inline-block;">
+                            <input type="radio" name="choice" value="O" onclick={on_change_disc_o} checked={self.disc_type == 'O'} id="disc_o"/>
+                            <label for="disc_o" style="cursor: pointer; font-size: 16px; color: #FF5733; padding: 8px 20px; border: 2px solid #FF5733; border-radius: 5px; background-color: white;">{"O"}</label>
+                        </div>
                     </h4>
                     <style>
                         {"
@@ -612,23 +694,29 @@ impl TootComputerController {
                                 height: 40px;
                                 border-radius: 50%;
                                 background-color: #ccc;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                font-size: 24px;
+                                color: #333;
+                                border: 2px solid #fff;
                             "}
                     </style>
-                    <table>
+                    <table style="margin-top: 20px; margin-left: auto; margin-right: auto;">
                         <tbody>
                             <tr>
-                                { for (0..6).map(|i| {
+                                { for (0..self.Columns).map(|i| {
                                     html! {
-                                        <th><ButtonInput id={i.to_string()} value={i.to_string()} on_click={on_change.clone()}/></th>
+                                        <th style="padding: 5px;"><ButtonInput id={i.to_string()} value={i.to_string()} on_click={on_change.clone()}/></th>
                                     }
                                 })}
                             </tr>
-                            { for (0..4).map(|row| {
+                            { for (0..self.Rows).map(|row| {
                                 html! {
                                     <tr>
-                                        { for (0..6).map(|col| {
+                                        { for (0..self.Columns).map(|col| {
                                             html! {
-                                                <td><div class="circle">{self.matrix[row][col]}</div></td>
+                                                <td style="padding: 5px;"><div class="circle">{self.matrix[row][col]}</div></td>
                                             }
                                         })}
                                     </tr>
@@ -648,8 +736,8 @@ impl TootComputerController {
         let mut temp_br1 = [' '; 4];
         let mut temp_br2 = [' '; 4];
         
-        for i in 0..4 {
-            for j in 0..6 {
+        for i in 0..self.Rows {
+            for j in 0..self.Columns {
                 temp_r1 = [' '; 4];
                 temp_b1 = [' '; 4];
                 temp_br1 = [' '; 4];
@@ -657,19 +745,19 @@ impl TootComputerController {
                 
                 for k in 0..=3 {
                     // from (i,j) to right
-                    if j + k < 6 {
+                    if j + k < self.Columns {
                         temp_r1[k] = self.matrix[i][j + k];
                     }
                     // from (i,j) to bottom
-                    if i + k < 4 && j < 6 {
+                    if i + k < self.Rows && j < self.Columns {
                         temp_b1[k] = self.matrix[i + k][j];
                     }
                     // from (i,j) to bottom-right
-                    if i + k < 4 && j + k < 6 {
+                    if i + k < self.Rows && j + k < self.Columns {
                         temp_br1[k] = self.matrix[i + k][j + k];
                     }
                     // from (i,j) to top-right
-                    if i as i32 - k as i32 >= 0 && j + k < 6 {
+                    if i as i32 - k as i32 >= 0 && j + k < self.Columns {
                         temp_br2[k] = self.matrix[i - k][j + k];
                     }
                 }
@@ -730,7 +818,7 @@ impl TootComputerController {
             <div style="background-color: #f0f0f0; padding: 20px; border: 2px solid #ccc; border-radius: 8px;">
                 {win_statement}
                 <div style="text-align: center;">
-                    <button style="padding: 10px 20px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+                    <button onclick={ctx.link().callback(|_| OttOMsg::ResetGame)} style="padding: 10px 20px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
                         {"Restart"}
                     </button>
                 </div>
@@ -761,7 +849,7 @@ impl TootComputerController {
         }
 
         // Place computer disc
-        for i in (0..=3).rev() {
+        for i in (0..self.Rows).rev() {
             if self.matrix[i][col] == ' ' && self.disc_type != '_' && !*full_col_pressed {
                 self.matrix[i][col] = ['T', 'O'][rng.gen_range(0..=1)];
                 *full_col_pressed = true;
@@ -777,7 +865,7 @@ impl TootComputerController {
         web_sys::console::log_1(&JsValue::from_str(&(ai_move.1).to_string()));
 
         // Place computer disc
-        for i in (0..=3).rev() {
+        for i in (0..self.Rows).rev() {
             if self.matrix[i][ai_move.1 as usize] == ' ' && self.disc_type != '_' && !*full_col_pressed {
                 self.matrix[i][ai_move.1 as usize] = if self.ai_move_value > 0 {'T'} else {'O'};
                 self.dummy_matrix[i][ai_move.1 as usize] = if self.ai_move_value > 0 {1} else {-1};
@@ -788,12 +876,15 @@ impl TootComputerController {
 
     }
 
-    fn check_state(state: &[[i32; 6]; 4]) -> (i32, i32) {
+    fn check_state(state: &Vec<Vec<i32>>) -> (i32, i32) {
         let mut win_val = 0;
         let mut chain_val = 0;
+
+        let rows = state.len();
+        let columns = state.get(0).map_or(0, |row| row.len());
     
-        for i in 0..4 {
-            for j in 0..6 {
+        for i in 0..rows {
+            for j in 0..columns {
                 let mut temp_r: i32 = 0;
                 let mut temp_b: i32 = 0;
                 let mut temp_br: i32 = 0;
@@ -801,22 +892,22 @@ impl TootComputerController {
     
                 for k in 0..=3 {
                     // From (i,j) to right
-                    if j + k < 6 {
+                    if j + k < columns {
                         temp_r += state[i][j + k] as i32;
                     }
     
                     // From (i,j) to bottom
-                    if i + k < 4 {
+                    if i + k < rows {
                         temp_b += state[i + k][j] as i32;
                     }
     
                     // From (i,j) to bottom-right
-                    if i + k < 4 && j + k < 6 {
+                    if i + k < rows && j + k < columns {
                         temp_br += state[i + k][j + k] as i32;
                     }
     
                     // From (i,j) to top-right
-                    if i as i32 - k as i32 >= 0 && j + k < 5 {
+                    if i as i32 - k as i32 >= 0 && j + k < columns {
                         temp_tr += state[i - k][j + k] as i32;
                     }
                 }
@@ -841,16 +932,18 @@ impl TootComputerController {
         (win_val, chain_val)
     }
 
-    pub fn fill_map(state: &[[i32; 6]; 4], column: usize, value: i32) -> Result<[[i32; 6]; 4], i32> {
-        if state[0][column] != 0 || column > 5 {
+    pub fn fill_map(state: &Vec<Vec<i32>>, column: usize, value: i32) -> Result<Vec<Vec<i32>>, i32> {
+        let rows = state.len();
+        let col = state.get(0).map_or(0, |row| row.len());
+        if state[0][column] != 0 || column > col-1 {
             return Err(-1);
         }
     
-        let mut temp_map = *state;
+        let mut temp_map = state.clone();
     
         let mut row = 0;
         let mut done = false;
-        for i in 0..3 {
+        for i in 0..rows-1 {
             if temp_map[i + 1][column] != 0 {
                 done = true;
                 row = i;
@@ -858,7 +951,7 @@ impl TootComputerController {
             }
         }
         if !done {
-            row = 3;
+            row = rows-1;
         }
     
         temp_map[row][column] = value;
@@ -870,14 +963,14 @@ impl TootComputerController {
         choice[index]
     }
 
-    fn max_state(&self, state: &[[i32; 6]; 4], depth: i32, alpha: i32, beta: i32) -> (i32, i32) {
+    fn max_state(&self, state: &Vec<Vec<i32>>, depth: i32, alpha: i32, beta: i32) -> (i32, i32) {
         let mut v: i32 = i32::MIN;
         let mut move_col: i32 = -1;
         let mut temp_val: (i32, i32) = (-1, -1); // Placeholder value
         let mut move_queue: Vec<i32> = vec![];
         let mut new_alpha: i32 = alpha;
     
-        for j in 0..6 {
+        for j in 0..self.Columns {
             let temp_state_result = Self::fill_map(&state, j, self.ai_move_value);
             if let Ok(temp_state) = temp_state_result {
                 temp_val = self.value(&temp_state, depth, new_alpha, beta);
@@ -901,14 +994,14 @@ impl TootComputerController {
         (v, move_choice)
     }
 
-    fn min_state(&self, state: &[[i32; 6]; 4], depth: i32, alpha: i32, mut beta: i32) -> (i32, i32) {
+    fn min_state(&self, state: &Vec<Vec<i32>>, depth: i32, alpha: i32, mut beta: i32) -> (i32, i32) {
         let mut v: i32 = i32::MAX;
         let mut move_col: i32 = -1;
         let mut temp_val: (i32, i32) = (-1, -1); // Placeholder value
         let mut move_queue: Vec<i32> = vec![];
         let mut new_beta: i32 = beta;
     
-        for j in 0..6 {
+        for j in 0..self.Columns {
             if let Ok(temp_state) = Self::fill_map(&state, j, self.ai_move_value * -1) {
                 temp_val = self.value(&temp_state, depth, alpha, new_beta);
                 if temp_val.0 < v {
@@ -931,7 +1024,7 @@ impl TootComputerController {
         (v, move_choice)
     }
 
-    fn value(&self, state: &[[i32; 6]; 4], depth: i32, alpha: i32, beta: i32) -> (i32, i32) {
+    fn value(&self, state: &Vec<Vec<i32>>, depth: i32, alpha: i32, beta: i32) -> (i32, i32) {
         let val = Self::check_state(state);
         if depth >= 4 {
             let mut ret_value = 0;
