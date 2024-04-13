@@ -59,6 +59,11 @@ impl Component for Model {
     fn update(&mut self, _: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::StartGame => {
+                if self.board_size == "custom"{
+                    self.board = vec![vec![None; self.custom_rows as usize]; self.custom_cols as usize];
+                } else {
+                    self.board = vec![vec![None; 6]; 7];
+                }
                 self.game_started = true;    
                 true
             }Msg::RestartGame =>{
@@ -420,14 +425,24 @@ impl Model {
     
     
     fn view_board(&self, ctx: &Context<Self>) -> Html {
+        let grid_style = format!(
+            "display: grid; grid-template-columns: repeat({}, 1fr); grid-gap: 10px;",
+            self.custom_cols
+        );
+        let mut board_color = "#01befe";
+        if self.color_mode == "colorBlind2"{
+            board_color = "#800080"
+        }
+    
         html! {
-            <div id="board" style="background-color: #01befe; padding: 10px; display: flex; justify-content: center; border-radius: 10px;">
+            <div id="board" style={format!("background-color: {}; padding: 10px; display: flex; justify-content: center; border-radius: 10px;", board_color)}>
                 <div style="display: grid; grid-template-columns: repeat(7, 1fr); grid-gap: 10px;">
-                    { for self.board.iter().enumerate().map(|(col_idx, col)| self.view_column(ctx,col_idx, col)) }
+                    { for self.board.iter().enumerate().map(|(col_idx, col)| self.view_column(ctx, col_idx, col)) }
                 </div>
             </div>
         }
     }
+    
 
     fn view_column(&self, ctx: &Context<Self>, col_idx: usize, column: &Vec<Option<String>>) -> Html {
         html! {
@@ -439,10 +454,19 @@ impl Model {
 
     fn view_cell(&self, ctx: &Context<Self>, col_idx: usize, row_idx: usize, cell: &Option<String>) -> Html {
         let cell_color = cell.as_ref().map_or("#FFFFFF", |player| {
+        let mut human_color = "#FF0000";
+        let mut ai_color = "#FFFF00";
+            if self.color_mode == "colorBlind1"{
+                human_color = "#Fd6900";
+                ai_color =  "#d3d3d3";
+            } else if self.color_mode == "colorBlind2"{
+                human_color = "#008080";
+                ai_color =  "#FFFF00";
+            }
             if player == "Red" {
-                "#FF0000"
+                human_color
             } else {
-                "#FFFF00"
+                ai_color
             }
         });
     
